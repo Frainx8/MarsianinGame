@@ -1,13 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace MarsianinGame
 {
-    class Maps
+    public class Maps
     {
         public Maps(string nameOfMap)
         {
             Map = ReadTxt(nameOfMap);
+            if (IsThereElement('Q') == false)
+            {
+                throw new System.ArgumentException("There is no exit!", "Map");
+            }
+            if (IsThereElement('S') == false)
+            {
+                throw new System.ArgumentException("There is no enter!", "Map");
+            }
         }
 
         public char[,] Map { get; private set; }
@@ -19,7 +28,12 @@ namespace MarsianinGame
 
         public void DeleteObject(Point position)
         {
-            Map[position.Y, position.X] = '.';
+            ChangeObject(position, '.');
+        }
+
+        public void ChangeObject(Point position, char _object)
+        {
+            Map[position.Y, position.X] = _object;
         }
 
         private char[,] ReadTxt(string nameOfMap) // Функция для чтения .txt файла
@@ -55,21 +69,63 @@ namespace MarsianinGame
             }
         }
 
-        public Point ReturnStartPoint()
+        public Point ReturnAnElementPosition(char element)
         {
             for (int y = 0; y < Map.GetLength(1); y++)
             {
                 for (int x = 0; x < Map.GetLength(0); x++)
                 {
-                    if (Map[y, x] == 'S')
+                    if (Map[y, x] == element)
                     {
                         return new Point(x, y);
                     }
                 }
             }
-            throw new System.ArgumentException("There is no 'S' in the map!", "Map");
+            return new Point(-1, -1);
         }
 
-        
+        public bool IsThereElement(char element)
+        {
+            if (ReturnAnElementPosition(element).Equals(new Point(-1, -1)))
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        public List<Point> ReturnNeighbours(Point point)
+        {
+
+            List<Point> neigbours = new List<Point>();
+
+            if (point.X != 0)
+            {
+                Point leftPoint = new Point(point, -1, Point.Key.X);
+                if(ReturnObject(leftPoint) != 'X')
+                    neigbours.Add(leftPoint);
+            }
+            if (point.X != Map.GetLength(0) - 1)
+            {
+                Point rightPoint = new Point(point, 1, Point.Key.X);
+                if (ReturnObject(rightPoint) != 'X')
+                    neigbours.Add(rightPoint);
+            }
+            if (point.Y != 0)
+            {
+                Point upperPoint = new Point(point, -1, Point.Key.Y);
+                if (ReturnObject(upperPoint) != 'X')
+                    neigbours.Add(upperPoint);
+            }
+            if (point.Y != Map.GetLength(1) - 1)
+            {
+                Point belowPoint = new Point(point, 1, Point.Key.Y);
+                if (ReturnObject(belowPoint) != 'X')
+                    neigbours.Add(belowPoint);
+            }
+            return neigbours;
+        }
     }
 }
