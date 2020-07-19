@@ -7,18 +7,112 @@ namespace MarsianinGame
 {
     public class Algorithm
     {
-        Maps map;
-        const int POINTSRANGE = 1;
+        private Maps map;
+        private const int POINTSRANGE = 1;
+        private static readonly char[] DOORS = { 'A', 'B', 'C', 'E', 'D' };
         public Algorithm(Maps map)
         {
             this.map = map;
-            //Point[] example = FindPath(map.ReturnAnElementPosition('S'), map.ReturnAnElementPosition('Q'));
-            //foreach(Point x in example)
-            //{
-            //    map.ChangeObject(x, '0');
-            //}
+
+            //FIRST step - find the way to the Q through doors.
+            Point[] firstStep = FindPath(map.ReturnAnElementPosition('S'), map.ReturnAnElementPosition('Q'));
+
+            //SECOND step - find all the doors that lead to the Q.
+
+            //Use it for all needed doors to get to Q. Bool to check if already check the way to the door.
+            Dictionary<Point, bool> allDoorsInTheSecondStep = new Dictionary<Point, bool>();
+
+            //Fill the dictionary by the path from the first step.
+            foreach (Point doorPosition in ReturnDoorsInThePath(firstStep))
+            {
+                allDoorsInTheSecondStep.Add(doorPosition, false);
+            }
+
+            //Check if there is at least one door in the way to Q.
+            if (allDoorsInTheSecondStep.Any() == true)
+            {
+                //looking for doors that lead to the 'main' doors from the first path
+                while (AreAllDoorsVisited(allDoorsInTheSecondStep) != true)
+                {
+                    Point notVisitedDoor = ReturnNotVisitedDoor(allDoorsInTheSecondStep);
+                    allDoorsInTheSecondStep[notVisitedDoor] = true;
+
+                    char doorKey = Char.ToLower(map.ReturnObject(notVisitedDoor));
+                    Point[] tempPathToTheNotVisitedDoor = FindPath(notVisitedDoor, map.ReturnAnElementPosition(doorKey));
+
+                    //Check if there is any door in the temp way.
+                    if (tempPathToTheNotVisitedDoor.Any() == true)
+                        foreach (Point tempDoor in ReturnDoorsInThePath(tempPathToTheNotVisitedDoor))
+                        {
+                            if (allDoorsInTheSecondStep.ContainsKey(tempDoor) != true)
+                            {
+                                allDoorsInTheSecondStep.Add(tempDoor, false);
+                            }
+                        }
+                }
+            }
+            
         }
 
+        private Point ReturnNotVisitedDoor(Dictionary<Point, bool> allDoorsDictionary)
+        {
+            foreach(KeyValuePair<Point, bool> door in allDoorsDictionary)
+            {
+                if(door.Value == false)
+                {
+                    return door.Key;
+                }
+            }
+            return new Point(-1, -1);
+        }
+
+        /// <summary>
+        /// Check if all the doors in the dictionary are visited.
+        /// </summary>
+        /// <param name="doors">A dictionary of doors by their position.</param>
+        /// <returns>True if all are visited, otherwise false</returns>
+        private bool AreAllDoorsVisited(Dictionary<Point, bool> doors)
+        {
+            foreach (bool check in doors.Values)
+            {
+                if (check == false)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Finds all doors in the path.
+        /// </summary>
+        /// <param name="thePath">Array of Points - A path for searching the doors.</param>
+        /// <returns>An array of position of the founded doors.</returns>
+        private List<Point> ReturnDoorsInThePath(Point[] path)
+        {
+            List<Point> result = new List<Point>();
+            foreach (Point position in path)
+            {
+                char tempObject = map.ReturnObject(position);
+                if (tempObject == '.')
+                    continue;
+                else if (DOORS.Contains(tempObject))
+                {
+                    if(result.Contains(position) != true)
+                    {
+                        result.Add(position);
+                    }
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Uses A* algorithm to find the shortest way to the goal.
+        /// </summary>
+        /// <param name="start">The start Point.</param>
+        /// <param name="goal">The destiny point.</param>
+        /// <returns>The array of Point from which the path is.</returns>
         private Point[] FindPath(Point start, Point goal)
         {
             Cell source = new Cell() { Parent = null, Point = start };
