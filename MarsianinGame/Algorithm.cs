@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 
@@ -10,13 +11,19 @@ namespace MarsianinGame
         private Maps map;
         private const int POINTSRANGE = 1;
         private static readonly char[] DOORS = { 'A', 'B', 'C', 'E', 'D' };
+        private const char MEDKIT = 'H';
+        const int MAX_XP = 100;
+        int currentXP = MAX_XP;
         public Algorithm(Maps map)
         {
             this.map = map;
 
+            #region First step
             //FIRST step - find the way to the Q through doors.
             Point[] firstStep = FindPath(map.ReturnAnElementPosition('S'), map.ReturnAnElementPosition('Q'));
+            #endregion
 
+            #region Second step
             //SECOND step - find all the doors that lead to the Q.
 
             //Use it for all needed doors to get to Q. Bool to check if already check the way to the door.
@@ -35,6 +42,10 @@ namespace MarsianinGame
                 while (AreAllDoorsVisited(allDoorsInTheSecondStep) != true)
                 {
                     Point notVisitedDoor = ReturnNotVisitedDoor(allDoorsInTheSecondStep);
+                    if (notVisitedDoor.Equals(new Point(-1, -1)))
+                    {
+                        throw new System.ArgumentException("There is point -1, -1!", "notVisitedDoor");
+                    }
                     allDoorsInTheSecondStep[notVisitedDoor] = true;
 
                     char doorKey = Char.ToLower(map.ReturnObject(notVisitedDoor));
@@ -51,9 +62,95 @@ namespace MarsianinGame
                         }
                 }
             }
-            
+            #endregion
+
+            #region Third step
+            //Find closer cards, deleting the doors and escaping the fire.
+
+            //Position where the 'character' is after made steps.
+            Point currentPosition = map.ReturnAnElementPosition('S');
+
+            //Before looping
+            List<Point> allKeysInTheThirdStep = new List<Point>();
+            foreach (Point door in allDoorsInTheSecondStep.Keys)
+            {
+                allKeysInTheThirdStep.Add(map.ReturnAnElementPosition(Char.ToLower(map.ReturnObject(door))));
+            }
+
+            List<Point> tempAllKeysInTheThirdStep = new List<Point>();
+            foreach (Point key in allKeysInTheThirdStep)
+            {
+                tempAllKeysInTheThirdStep.Add(key);
+            }
+
+            List<Point[]> theWholePath = new List<Point[]>();
+
+            while (allKeysInTheThirdStep.Any() == true)
+            {
+                //Counting steps to all keys
+                Dictionary<Point, int> numberOfStepsToKeys = new Dictionary<Point, int>();
+                foreach (Point key in tempAllKeysInTheThirdStep)
+                {
+                    Point[] pathToTheKey = FindPath(currentPosition, key);
+                    numberOfStepsToKeys.Add(key, pathToTheKey.Length);
+                }
+
+
+                //Searching for key with minumal number of steps.
+                Point goal = numberOfStepsToKeys.Aggregate((l, r) => l.Value < r.Value ? l : r).Key;
+
+                Point[] pathToTheGoal = FindPath(currentPosition, goal);
+
+                //If there is a door - switch to another closest door
+                //NOTE I can simplify the search just to use higher amount of steps after break.
+                bool flagIfBreak = false;
+
+                foreach (Point position in pathToTheGoal)
+                {
+                    if (DOORS.Contains(map.ReturnObject(position)))
+                    {
+                        flagIfBreak = true;
+                        break;
+                    }
+                }
+
+                if (flagIfBreak == true)
+                {
+                    tempAllKeysInTheThirdStep.Remove(goal);
+                    continue;
+                }
+
+                
+                Point theDoor = map.ReturnAnElementPosition(Char.ToUpper(map.ReturnObject(goal)));
+                map.DeleteObject(theDoor);
+                map.DeleteObject(goal);
+                allKeysInTheThirdStep.Remove(goal);
+                tempAllKeysInTheThirdStep.Clear();
+                foreach (Point key in allKeysInTheThirdStep)
+                {
+                    tempAllKeysInTheThirdStep.Add(key);
+                }
+                currentPosition = pathToTheGoal.Last();
+
+
+                //NOTE i have excess point in the end og the way.
+                theWholePath.Add(pathToTheGoal);
+            }
+
+            Point[] pathToTheExit = FindPath(currentPosition, map.ReturnAnElementPosition('Q'));
+
+            theWholePath.Add(pathToTheExit);
+            theWholePath.ForEach(x => Array.ForEach(x, i => map.WritePointInConsole(i)));
+
+            currentPosition = pathToTheExit.Last();
+            #endregion
         }
 
+        /// <summary>
+        /// Check if a dictionary has at least one unvisited door.
+        /// </summary>
+        /// <param name="allDoorsDictionary">Dictionary to check.</param>
+        /// <returns>Return position of the door. Else return Point -1, -1.</returns>
         private Point ReturnNotVisitedDoor(Dictionary<Point, bool> allDoorsDictionary)
         {
             foreach(KeyValuePair<Point, bool> door in allDoorsDictionary)
@@ -154,6 +251,12 @@ namespace MarsianinGame
             }
             return null;
         }
+        
+        /// <summary>
+        /// Uses Cell's parents to get the full path.
+        /// </summary>
+        /// <param name="goal">Last Cell of the path.</param>
+        /// <returns>Array of points which the path is made of.</returns>
         private Point[] ReturnPath(Cell goal)
         {
             List<Cell> list = new List<Cell>();
@@ -177,6 +280,13 @@ namespace MarsianinGame
             }
         }
 
+        /// <summary>
+        /// Manhattan Distance for A* algorithm.
+        /// </summary>
+        /// <param name="current">Position of a point on a map.</param>
+        /// <param name="goal">Target point where we want to come.</param>
+        /// <returns>The sum of absolute values of differences.</returns>
+        /// <remarks>Use it when we are allowed to move only in four directions only</remarks>
         private int ReturnH(Point current, Point goal)
         {
             return Math.Abs(current.X - goal.X) + Math.Abs(current.Y - goal.Y);

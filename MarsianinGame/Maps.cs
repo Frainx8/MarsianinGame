@@ -4,6 +4,10 @@ using System.IO;
 
 namespace MarsianinGame
 {
+    /// <summary>
+    /// Tools for a map.
+    /// </summary>
+    /// <remarks>Use WritePointInConsole for debugging</remarks>
     public class Maps
     {
         public Maps(string nameOfMap)
@@ -126,6 +130,11 @@ namespace MarsianinGame
                     neigbours.Add(belowPoint);
             }
             return neigbours;
+        }
+
+        public void WritePointInConsole(Point point)
+        {
+            Console.WriteLine(point.X + " -" + point.Y);
         }
     }
 }
