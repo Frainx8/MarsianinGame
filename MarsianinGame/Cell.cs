@@ -30,6 +30,13 @@ namespace MarsianinGame
             Parent = parent;
         }
 
+        public Cell(Point point, int g, Cell parent)
+        {
+            Point = point;
+            G = g;
+            Parent = parent;
+        }
+
         public bool Equals(Cell other)
         {
             if (other.Point.Equals(Point))

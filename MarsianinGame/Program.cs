@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace MarsianinGame
 {
@@ -8,14 +9,24 @@ namespace MarsianinGame
         {
             Maps myMap = new Maps(@"maps/map3.txt");
             Algorithm algorithm = new Algorithm(myMap);
-            for (int y = 0; y < myMap.Map.GetLength(1); y++)
+            foreach(Point point in algorithm.Result)
             {
-                for (int x = 0; x < myMap.Map.GetLength(0); x++)
+                for (int y = 0; y < myMap.Map.GetLength(1); y++)
                 {
-                    Console.Write(myMap.Map[y, x]);
-                    Console.Write(" ");
+                    for (int x = 0; x < myMap.Map.GetLength(0); x++)
+                    {
+                        if(point.X == x && point.Y ==y)
+                        {
+                            Console.Write('P');
+                        }
+                        else
+                            Console.Write(myMap.Map[y, x]);
+                        Console.Write(" ");
+                    }
+                    Console.WriteLine();
                 }
-                Console.WriteLine();
+                Thread.Sleep(500);
+                Console.Clear();
             }
             
         }

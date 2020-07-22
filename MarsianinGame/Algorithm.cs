@@ -8,6 +8,7 @@ namespace MarsianinGame
 {
     public class Algorithm
     {
+        public Point[] Result { get; private set; }
         private Maps map;
         private const int POINTSRANGE = 1;
         private static readonly char[] DOORS = { 'A', 'B', 'C', 'E', 'D' };
@@ -18,6 +19,11 @@ namespace MarsianinGame
         {
             this.map = map;
 
+            Result = TheAlgorithm();
+        }
+
+        private Point[] TheAlgorithm()
+        {
             #region First step
             //FIRST step - find the way to the Q through doors.
             Point[] firstStep = FindPath(map.ReturnAnElementPosition('S'), map.ReturnAnElementPosition('Q'));
@@ -77,73 +83,114 @@ namespace MarsianinGame
                 allKeysInTheThirdStep.Add(map.ReturnAnElementPosition(Char.ToLower(map.ReturnObject(door))));
             }
 
-            List<Point> tempAllKeysInTheThirdStep = new List<Point>();
-            foreach (Point key in allKeysInTheThirdStep)
-            {
-                tempAllKeysInTheThirdStep.Add(key);
-            }
 
-            List<Point[]> theWholePath = new List<Point[]>();
+            //The result of the algorithm.
+            List<Point> theWholePath = new List<Point>();
 
             while (allKeysInTheThirdStep.Any() == true)
             {
                 //Counting steps to all keys
                 Dictionary<Point, int> numberOfStepsToKeys = new Dictionary<Point, int>();
-                foreach (Point key in tempAllKeysInTheThirdStep)
+                foreach (Point key in allKeysInTheThirdStep)
                 {
                     Point[] pathToTheKey = FindPath(currentPosition, key);
                     numberOfStepsToKeys.Add(key, pathToTheKey.Length);
                 }
 
+                Point goal;
+                Point[] pathToTheGoal;
 
-                //Searching for key with minumal number of steps.
-                Point goal = numberOfStepsToKeys.Aggregate((l, r) => l.Value < r.Value ? l : r).Key;
-
-                Point[] pathToTheGoal = FindPath(currentPosition, goal);
-
-                //If there is a door - switch to another closest door
-                //NOTE I can simplify the search just to use higher amount of steps after break.
-                bool flagIfBreak = false;
-
-                foreach (Point position in pathToTheGoal)
+                while (true)
                 {
-                    if (DOORS.Contains(map.ReturnObject(position)))
+
+                    //Searching for key with minumal number of steps.
+                    goal = numberOfStepsToKeys.Aggregate((l, r) => l.Value < r.Value ? l : r).Key;
+
+                    pathToTheGoal = FindPath(currentPosition, goal);
+
+                    bool flagIfBreak = false;
+
+                    //If there is a door - switch to another closest door
+                    foreach (Point position in pathToTheGoal)
                     {
-                        flagIfBreak = true;
+                        if (DOORS.Contains(map.ReturnObject(position)))
+                        {
+                            flagIfBreak = true;
+                            break;
+                        }
+                    }
+
+                    if (flagIfBreak == true)
+                    {
+                        numberOfStepsToKeys.Remove(goal);
+                    }
+                    else
+                    {
                         break;
                     }
                 }
 
-                if (flagIfBreak == true)
-                {
-                    tempAllKeysInTheThirdStep.Remove(goal);
-                    continue;
-                }
-
-                
                 Point theDoor = map.ReturnAnElementPosition(Char.ToUpper(map.ReturnObject(goal)));
                 map.DeleteObject(theDoor);
                 map.DeleteObject(goal);
                 allKeysInTheThirdStep.Remove(goal);
-                tempAllKeysInTheThirdStep.Clear();
-                foreach (Point key in allKeysInTheThirdStep)
-                {
-                    tempAllKeysInTheThirdStep.Add(key);
-                }
                 currentPosition = pathToTheGoal.Last();
-
-
-                //NOTE i have excess point in the end og the way.
-                theWholePath.Add(pathToTheGoal);
+                theWholePath.AddRange(pathToTheGoal);
+                theWholePath.Remove(theWholePath.Last());
             }
 
             Point[] pathToTheExit = FindPath(currentPosition, map.ReturnAnElementPosition('Q'));
 
-            theWholePath.Add(pathToTheExit);
-            theWholePath.ForEach(x => Array.ForEach(x, i => map.WritePointInConsole(i)));
+            theWholePath.AddRange(pathToTheExit);
 
             currentPosition = pathToTheExit.Last();
+
+            return theWholePath.ToArray();
             #endregion
+        }
+
+        /// <summary>
+        /// Uses Dijkstra's algorithm to find the closest medkit.
+        /// </summary>
+        /// <param name="start">Start position where the search starts</param>
+        /// <returns>Return a path to the closest medkit.</returns>
+        private Point[] ReturnClosestMedkit(Point start)
+        {
+            Cell source = new Cell(start, 0, null);
+            List<Cell> openList = new List<Cell>()
+            {
+                source
+            };
+            List<Cell> closedList = new List<Cell>();
+
+            while(openList.Any() == true)
+            {
+                IEnumerable<Cell> query = openList.OrderBy(x => x.G);
+                Cell current = query.First();
+                openList.Remove(current);
+                closedList.Add(current);
+                Point[] neighbors = map.ReturnNeighbours(current.Point).ToArray();
+                foreach (Point neighbor in neighbors)
+                {
+                    Cell newCell = new Cell(neighbor, current.G + POINTSRANGE, current);
+                    if (map.ReturnObject(newCell.Point) == MEDKIT)
+                        return ReturnPath(newCell);
+                    if (closedList.Contains(newCell) == false)
+                    {
+
+                        if (openList.Contains(newCell) == true)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            openList.Add(newCell);
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
