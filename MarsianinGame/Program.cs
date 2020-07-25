@@ -9,13 +9,13 @@ namespace MarsianinGame
         {
             Maps myMap = new Maps(@"maps/map3.txt");
             Algorithm algorithm = new Algorithm(myMap);
-            foreach(Point point in algorithm.Result)
+            foreach (Point point in algorithm.Result)
             {
                 for (int y = 0; y < myMap.Map.GetLength(1); y++)
                 {
                     for (int x = 0; x < myMap.Map.GetLength(0); x++)
                     {
-                        if(point.X == x && point.Y ==y)
+                        if (point.X == x && point.Y == y)
                         {
                             Console.Write('P');
                         }
@@ -25,10 +25,10 @@ namespace MarsianinGame
                     }
                     Console.WriteLine();
                 }
-                Thread.Sleep(500);
+                Thread.Sleep(200);
                 Console.Clear();
             }
-            
+
         }
     }
 }

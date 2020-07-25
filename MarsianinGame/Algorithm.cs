@@ -12,6 +12,7 @@ namespace MarsianinGame
         private Maps map;
         private const int POINTSRANGE = 1;
         private static readonly char[] DOORS = { 'A', 'B', 'C', 'E', 'D' };
+        private static readonly char[] FIRE_POWER = { '1', '2', '3', '4', '5' };
         private const char MEDKIT = 'H';
         const int MAX_XP = 100;
         int currentXP = MAX_XP;
@@ -102,7 +103,6 @@ namespace MarsianinGame
 
                 while (true)
                 {
-
                     //Searching for key with minumal number of steps.
                     goal = numberOfStepsToKeys.Aggregate((l, r) => l.Value < r.Value ? l : r).Key;
 
@@ -113,11 +113,13 @@ namespace MarsianinGame
                     //If there is a door - switch to another closest door
                     foreach (Point position in pathToTheGoal)
                     {
-                        if (DOORS.Contains(map.ReturnObject(position)))
+                        char tempObject = map.ReturnObject(position);
+                        if (DOORS.Contains(tempObject))
                         {
                             flagIfBreak = true;
                             break;
                         }
+
                     }
 
                     if (flagIfBreak == true)
@@ -129,6 +131,75 @@ namespace MarsianinGame
                         break;
                     }
                 }
+
+                //Creating two temp path to the goal for checking fire in the way.
+
+                //Keeps whole way from one card to another
+                List<Point> tempPathToTheGoal = new List<Point>(pathToTheGoal);
+
+                //Used for keeping goal as target of the way.
+                List<Point> tempPathToTheGoal2 = new List<Point>(pathToTheGoal);
+                bool IsChanged = false;
+
+                while (true)
+                {
+                    bool IsDie = false;
+                    Point diePoint = new Point(-1, -1);
+                    Point pointBeforeDiePoint = new Point(-1, -1);
+                    Point position = new Point(-1, -1);
+
+                    for (int i = 0; i < tempPathToTheGoal2.Count(); i++)
+                    {
+                        position = tempPathToTheGoal2[i];
+                        char tempObject = map.ReturnObject(position);
+                        if (FIRE_POWER.Contains(tempObject))
+                        {
+                            
+                            IsDie = GetDamage((int)Char.GetNumericValue(tempObject));
+                            if (IsDie == true)
+                            {
+                                diePoint = position;
+                                pointBeforeDiePoint = tempPathToTheGoal2[i - 1];
+                                break;
+                            }
+                        }
+                    }
+                    if(IsDie == false)
+                    {
+                        if(IsChanged == true)
+                        {
+                            tempPathToTheGoal.AddRange(tempPathToTheGoal2);
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        
+                        Point medkitPosition = ReturnClosestMedkit(pointBeforeDiePoint, diePoint);
+                        UseMedkit(medkitPosition);
+                        if (IsChanged == false)
+                        {
+                            tempPathToTheGoal = new List<Point>(FindPath(currentPosition, medkitPosition));
+                            currentPosition = tempPathToTheGoal.Last();
+                            tempPathToTheGoal.Remove(tempPathToTheGoal.Last());
+                            tempPathToTheGoal2 = new List<Point>(FindPath(currentPosition, goal));
+                            IsChanged = true;
+                        }
+                        else
+                        {
+                            tempPathToTheGoal.AddRange(FindPath(currentPosition, medkitPosition));
+                            currentPosition = tempPathToTheGoal.Last();
+                            tempPathToTheGoal.Remove(tempPathToTheGoal.Last());
+                            tempPathToTheGoal2 = new List<Point>(FindPath(currentPosition, goal));
+                        }
+                    }
+                }
+
+                if(tempPathToTheGoal.SequenceEqual(pathToTheGoal) == false)
+                {
+                    pathToTheGoal = tempPathToTheGoal.ToArray();
+                }
+
 
                 Point theDoor = map.ReturnAnElementPosition(Char.ToUpper(map.ReturnObject(goal)));
                 map.DeleteObject(theDoor);
@@ -150,18 +221,46 @@ namespace MarsianinGame
         }
 
         /// <summary>
+        /// Take damage using currentXP.
+        /// </summary>
+        /// <param name="firePower">Fire power from 1 to 5.</param>
+        /// <returns>Return true if currentXP equals or below zero else false.</returns>
+        private bool GetDamage(int firePower)
+        {
+            int damage = 20;
+            currentXP -= damage * firePower;
+            if (currentXP <= 0)
+            {
+                return true;
+            }
+            else
+                return false;
+        }
+
+        private void UseMedkit(Point position)
+        {
+            currentXP = MAX_XP;
+            map.DeleteObject(position);
+        }
+
+        /// <summary>
         /// Uses Dijkstra's algorithm to find the closest medkit.
         /// </summary>
         /// <param name="start">Start position where the search starts</param>
         /// <returns>Return a path to the closest medkit.</returns>
-        private Point[] ReturnClosestMedkit(Point start)
+        private Point ReturnClosestMedkit(Point start, Point deathPoint)
         {
             Cell source = new Cell(start, 0, null);
+            Cell deathCell = new Cell(deathPoint, 0, null);
             List<Cell> openList = new List<Cell>()
             {
-                source
+                source,
+                
             };
-            List<Cell> closedList = new List<Cell>();
+            List<Cell> closedList = new List<Cell>()
+            {
+                deathCell
+            };
 
             while(openList.Any() == true)
             {
@@ -174,7 +273,7 @@ namespace MarsianinGame
                 {
                     Cell newCell = new Cell(neighbor, current.G + POINTSRANGE, current);
                     if (map.ReturnObject(newCell.Point) == MEDKIT)
-                        return ReturnPath(newCell);
+                        return newCell.Point;
                     if (closedList.Contains(newCell) == false)
                     {
 
@@ -190,7 +289,7 @@ namespace MarsianinGame
                 }
             }
 
-            return null;
+            return new Point(-1, -1);
         }
 
         /// <summary>
