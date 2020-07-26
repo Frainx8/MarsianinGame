@@ -12,6 +12,7 @@ namespace MarsianinGame
         private Maps map;
         private const int POINTSRANGE = 1;
         private static readonly char[] DOORS = { 'A', 'B', 'C', 'E', 'D' };
+        private static readonly char[] KEYS = { 'a', 'b', 'c', 'e', 'd' };
         private static readonly char[] FIRE_POWER = { '1', '2', '3', '4', '5' };
         private const char MEDKIT = 'H';
         const int MAX_XP = 100;
@@ -28,6 +29,11 @@ namespace MarsianinGame
             #region First step
             //FIRST step - find the way to the Q through doors.
             Point[] firstStep = FindPath(map.ReturnAnElementPosition('S'), map.ReturnAnElementPosition('Q'));
+
+            if(firstStep.Equals(new Point(-1, -1)))
+            {
+                throw new ArgumentException("There are no way to the Q!", "firstStep");
+            }
             #endregion
 
             #region Second step
@@ -51,22 +57,27 @@ namespace MarsianinGame
                     Point notVisitedDoor = ReturnNotVisitedDoor(allDoorsInTheSecondStep);
                     if (notVisitedDoor.Equals(new Point(-1, -1)))
                     {
-                        throw new System.ArgumentException("There is point -1, -1!", "notVisitedDoor");
+                        throw new System.ArgumentException("There is no visted door!", "notVisitedDoor");
                     }
                     allDoorsInTheSecondStep[notVisitedDoor] = true;
 
                     char doorKey = Char.ToLower(map.ReturnObject(notVisitedDoor));
                     Point[] tempPathToTheNotVisitedDoor = FindPath(notVisitedDoor, map.ReturnAnElementPosition(doorKey));
 
+                    if (tempPathToTheNotVisitedDoor.Equals(new Point(-1, -1)))
+                    {
+                        throw new ArgumentException("There are no way to the Q!", "tempPathToTheNotVisitedDoor");
+                    }
+
                     //Check if there is any door in the temp way.
-                    if (tempPathToTheNotVisitedDoor.Any() == true)
-                        foreach (Point tempDoor in ReturnDoorsInThePath(tempPathToTheNotVisitedDoor))
+                    
+                    foreach (Point tempDoor in ReturnDoorsInThePath(tempPathToTheNotVisitedDoor))
+                    {
+                        if (allDoorsInTheSecondStep.ContainsKey(tempDoor) != true)
                         {
-                            if (allDoorsInTheSecondStep.ContainsKey(tempDoor) != true)
-                            {
-                                allDoorsInTheSecondStep.Add(tempDoor, false);
-                            }
+                            allDoorsInTheSecondStep.Add(tempDoor, false);
                         }
+                    }
                 }
             }
             #endregion
@@ -103,6 +114,11 @@ namespace MarsianinGame
 
                 while (true)
                 {
+
+                    if(numberOfStepsToKeys.Any() == false)
+                    {
+                        throw new ArgumentException("There are no way to the Q!", "numberOfStepsToKeys");
+                    }
                     //Searching for key with minumal number of steps.
                     goal = numberOfStepsToKeys.Aggregate((l, r) => l.Value < r.Value ? l : r).Key;
 
@@ -147,24 +163,47 @@ namespace MarsianinGame
                     Point diePoint = new Point(-1, -1);
                     Point pointBeforeDiePoint = new Point(-1, -1);
                     Point position = new Point(-1, -1);
+                    Dictionary<Point, char> tempObjects = new Dictionary<Point, char>();
 
                     for (int i = 0; i < tempPathToTheGoal2.Count(); i++)
                     {
                         position = tempPathToTheGoal2[i];
                         char tempObject = map.ReturnObject(position);
+                        if(KEYS.Contains(tempObject))
+                        {
+                            map.DeleteObject(position);
+                            char doorC = Char.ToUpper(tempObject);
+                            Point doorP= map.ReturnAnElementPosition(doorC);
+                            map.DeleteObject(doorP);
+                            tempObjects.Add(position, tempObject);
+                            tempObjects.Add(doorP, doorC);
+                        }
+                        if(MEDKIT == tempObject)
+                        {
+                            UseMedkit(position);
+                            tempObjects.Add(position, tempObject);
+                        }
                         if (FIRE_POWER.Contains(tempObject))
                         {
                             
                             IsDie = GetDamage((int)Char.GetNumericValue(tempObject));
                             if (IsDie == true)
                             {
+                                foreach(KeyValuePair<Point, char> _object in tempObjects)
+                                {
+                                    map.ChangeObject(_object.Key, _object.Value);
+                                }
+                                
                                 diePoint = position;
                                 pointBeforeDiePoint = tempPathToTheGoal2[i - 1];
                                 break;
                             }
                         }
                     }
-                    if(IsDie == false)
+
+                    
+
+                    if (IsDie == false)
                     {
                         if(IsChanged == true)
                         {
@@ -174,7 +213,7 @@ namespace MarsianinGame
                     }
                     else
                     {
-                        
+                        //TODO Change this behavior.
                         Point medkitPosition = ReturnClosestMedkit(pointBeforeDiePoint, diePoint);
                         UseMedkit(medkitPosition);
                         if (IsChanged == false)
