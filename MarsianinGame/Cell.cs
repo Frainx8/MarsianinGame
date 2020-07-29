@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace MarsianinGame
+namespace Algorithm
 {
     public class Cell : IEquatable<Cell>
     {

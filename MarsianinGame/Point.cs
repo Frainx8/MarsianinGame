@@ -1,9 +1,11 @@
 ﻿using System;
 
-namespace MarsianinGame
+namespace Algorithm
 {
     public struct Point : IEquatable<Point>
     {
+
+        public static readonly Point nullPoint = new Point(-1, -1);
         public enum Key : byte
         {
             X,

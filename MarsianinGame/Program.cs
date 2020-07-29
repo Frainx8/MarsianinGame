@@ -1,14 +1,23 @@
 ﻿using System;
 using System.Threading;
 
-namespace MarsianinGame
+namespace Algorithm
 {
     class Program
     {
+        private const string MAP_NAME = @"maps/map3.txt";
+        private const int SLEEP_TIME = 200;
+        private static Maps myMap = new Maps(MAP_NAME);
+        private static Algorithm algorithm = new Algorithm(myMap);
         static void Main(string[] args)
         {
-            Maps myMap = new Maps(@"maps/map3.txt");
-            Algorithm algorithm = new Algorithm(myMap);
+            ShowAlgorithmResult();
+
+            Console.ReadKey();
+        }
+
+        private static void ShowAlgorithmResult()
+        {
             foreach (Point point in algorithm.Result)
             {
                 for (int y = 0; y < myMap.Map.GetLength(1); y++)
@@ -25,10 +34,9 @@ namespace MarsianinGame
                     }
                     Console.WriteLine();
                 }
-                Thread.Sleep(200);
+                Thread.Sleep(SLEEP_TIME);
                 Console.Clear();
             }
-
         }
     }
 }

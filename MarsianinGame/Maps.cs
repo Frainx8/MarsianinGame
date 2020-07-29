@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
-namespace MarsianinGame
+namespace Algorithm
 {
     /// <summary>
     /// Tools for a map.
@@ -25,21 +26,40 @@ namespace MarsianinGame
 
         public char[,] Map { get; private set; }
 
+        /// <summary>
+        /// Returns contained object in the point.
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
         public char ReturnObject(Point point)
         {
             return Map[point.Y, point.X];
         }
 
+        /// <summary>
+        /// Deleting an object in the map, replacing it with a dot.
+        /// </summary>
+        /// <param name="position"></param>
         public void DeleteObject(Point position)
         {
             ChangeObject(position, '.');
         }
 
+        /// <summary>
+        /// Changing an object in the map
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="_object"></param>
         public void ChangeObject(Point position, char _object)
         {
             Map[position.Y, position.X] = _object;
         }
 
+        /// <summary>
+        /// Using nameOfTheMap.txt to fill the Map.
+        /// </summary>
+        /// <param name="nameOfMap"></param>
+        /// <returns>Returns a double array of chars that map is.</returns>
         private char[,] ReadTxt(string nameOfMap) // Функция для чтения .txt файла
         {
             if (File.Exists(nameOfMap))
@@ -73,6 +93,11 @@ namespace MarsianinGame
             }
         }
 
+        /// <summary>
+        /// Returns first founded element in the map.
+        /// </summary>
+        /// <param name="element"></param>
+        /// <returns>Returns position of the element.</returns>
         public Point ReturnAnElementPosition(char element)
         {
             for (int y = 0; y < Map.GetLength(1); y++)
@@ -85,12 +110,44 @@ namespace MarsianinGame
                     }
                 }
             }
-            return new Point(-1, -1);
+            return Point.nullPoint;
         }
 
+        /// <summary>
+        /// Returns all founded elements in the map.
+        /// </summary>
+        /// <param name="element"></param>
+        /// <returns>Return an array of positions of the elements.</returns>
+        public Point[] ReturnElementsPositions(char element)
+        {
+            List<Point> result = new List<Point>();
+            for (int y = 0; y < Map.GetLength(1); y++)
+            {
+                for (int x = 0; x < Map.GetLength(0); x++)
+                {
+                    if (Map[y, x] == element)
+                    {
+                        result.Add(new Point(x, y));
+                    }
+                }
+            }
+
+            if(result.Any() == true)
+            {
+                return result.ToArray();
+            }
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Checks if there is an element in the map.
+        /// </summary>
+        /// <param name="element"></param>
+        /// <returns>Returns true is there is the element, otherwise false.</returns>
         public bool IsThereElement(char element)
         {
-            if (ReturnAnElementPosition(element).Equals(new Point(-1, -1)))
+            if (ReturnAnElementPosition(element).Equals(Point.nullPoint))
             {
                 return false;
             }
@@ -100,7 +157,12 @@ namespace MarsianinGame
             }
         }
 
-        public List<Point> ReturnNeighbours(Point point)
+        /// <summary>
+        /// Returns the nearest neigbors of the point.
+        /// </summary>
+        /// <param name="point">Main point</param>
+        /// <returns>Returns an array of points.</returns>
+        public Point[] ReturnNeighbours(Point point)
         {
 
             List<Point> neigbours = new List<Point>();
@@ -129,9 +191,13 @@ namespace MarsianinGame
                 if (ReturnObject(belowPoint) != 'X')
                     neigbours.Add(belowPoint);
             }
-            return neigbours;
+            return neigbours.ToArray();
         }
 
+        /// <summary>
+        /// Used for debuging a point in the console.
+        /// </summary>
+        /// <param name="point"></param>
         public void WritePointInConsole(Point point)
         {
             Console.WriteLine(point.X + " -" + point.Y);
