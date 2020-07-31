@@ -43,10 +43,6 @@ namespace ConsoleUI
             {
                 Console.WriteLine(e.Message);
             }
-            catch (FormatException)
-            {
-
-            }
             catch(Exception ex)
             {
                 Console.WriteLine("Ooops! Something went wrong!");

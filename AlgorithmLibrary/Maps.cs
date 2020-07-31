@@ -74,15 +74,12 @@ namespace AlgorithmLibrary
                 {
                     // Пытаюсь получить размер карты
                     int[] sizeOfMap = null;
-                    try
+                    string line = myFile.ReadLine();
+                    if (line.Last() == ' ')
                     {
-                        sizeOfMap = Array.ConvertAll(myFile.ReadLine().Split(' '), int.Parse);
+                        line = line.Remove(line.Length - 1);
                     }
-                    catch (System.FormatException e)
-                    {
-                        Console.WriteLine($"It look like you have excess spacebar in the first line!");
-                        throw;
-                    }
+                    sizeOfMap = Array.ConvertAll(line.Split(' '), int.Parse);
                     map = new char[sizeOfMap[0], sizeOfMap[1]]; // y and x
                     // Заполняю карту из .txt документа
                     for (int y = 0; y < sizeOfMap[0]; y++)
@@ -90,10 +87,14 @@ namespace AlgorithmLibrary
                         char[] charasters = null;
                         try
                         {
-                            string line = myFile.ReadLine();
-                            if(line == null)
+                            line = myFile.ReadLine();
+                            if(String.IsNullOrWhiteSpace(line))
                             {
                                 throw new ArgumentNullException();
+                            }
+                            else if(line.Last() == ' ')
+                            {
+                                line = line.Remove(line.Length - 1);
                             }
                             // строка, которая будет разбита на символы
                             charasters = Array.ConvertAll(line.Split(' '), char.Parse);
@@ -103,10 +104,10 @@ namespace AlgorithmLibrary
                             Console.WriteLine($"It look like the map dosn't have {y + 1} row");
                             throw;
                         }
-                        catch (System.FormatException e)
+
+                        if(charasters.Length != sizeOfMap[1])
                         {
-                            Console.WriteLine($"It look like you have excess spacebar in the {y+1} row");
-                            throw;
+                            throw new ArgumentException($"The {y + 1} row is too short!");
                         }
 
                         for (int x = 0; x < sizeOfMap[1]; x++)
@@ -122,7 +123,7 @@ namespace AlgorithmLibrary
             }
             else
             {
-                throw new System.ArgumentException("There is no such file", "nameOfMap");
+                throw new System.ArgumentException($"There is no such file: {nameOfMap}");
             }
         }
 
