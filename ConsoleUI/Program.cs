@@ -35,23 +35,29 @@ namespace ConsoleUI
                 Console.WriteLine("The program is done!");
                 Console.WriteLine("The results are written to moves.txt.");
             }
-            catch (ArgumentNullException)
+            catch (ArgumentException e) when (e.Message == "The character died in the way!" ||
+            e.Message == "There are no way to the Q!" || e.Message.Contains("There is something unknown"))
             {
-
+                Console.WriteLine(e.Message);
+                Console.WriteLine("Change the map and try again!");
             }
             catch (ArgumentException e)
             {
                 Console.WriteLine(e.Message);
+                MyDebug.WriteExceptionInFile(e);
+                Console.WriteLine("The error is in the log folder.");
+                Console.WriteLine("Fix the problem and try again.");
             }
             catch(Exception ex)
             {
                 Console.WriteLine("Ooops! Something went wrong!");
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.StackTrace);
-                Console.WriteLine("The log is in the log folder.");
+                Console.WriteLine("The error is in the log folder.");
                 MyDebug.WriteExceptionInFile(ex);
             }
-            Console.ReadKey();
+            if (!System.Diagnostics.Debugger.IsAttached)
+                Console.ReadKey();
         }
 
         private static void LoadGame(string[] args)

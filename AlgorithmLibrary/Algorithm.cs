@@ -68,7 +68,7 @@ namespace AlgorithmLibrary
 
             if(firstStep == null)
             {
-                throw new ArgumentException("There are no way to the Q! (FirstStep)");
+                throw new ArgumentException("There are no way to the Q!");
             }
             #endregion
 
@@ -104,7 +104,7 @@ namespace AlgorithmLibrary
 
                     if (tempPathToTheKey == null)
                     {
-                        throw new ArgumentException("There are no way to the Q! (SecondStep)");
+                        throw new ArgumentException("There are no way to the Q!");
                     }
 
                     //Check if there is any door in the key way.
@@ -164,7 +164,7 @@ namespace AlgorithmLibrary
                     //there are doors in the ways - it's impossible to reach Q.
                     if (numberOfStepsToKeys.Any() == false)
                     {
-                        throw new ArgumentException("There are no way to the Q! (Third step)");
+                        throw new ArgumentException("There are no way to the Q!");
                     }
                     //Searching for a key with the minimal number of steps.
                     goal = numberOfStepsToKeys.First().Key;
@@ -564,6 +564,10 @@ namespace AlgorithmLibrary
         private Point[] FindWayToNearestMedkit(Point currentPosition, Point pointBeforeDiePoint)
         {
             Point[] medkitsPositions = map.ReturnElementsPositions(Maps.MEDKIT);
+            if(medkitsPositions == null)
+            {
+                throw new ArgumentException("The character died in the way!");
+            }
             Dictionary<Point, int> closestMedkit = ReturnClosestObjects(pointBeforeDiePoint, medkitsPositions);
             foreach(Point medkitPosition in closestMedkit.Keys)
             {
@@ -578,7 +582,7 @@ namespace AlgorithmLibrary
                 }
             }
 
-            return null;
+            throw new ArgumentException("The character died in the way!");
         }
 
         private Dictionary<Point, int> ReturnClosestObjects(Point startPoint, Point[] listOfObjects)

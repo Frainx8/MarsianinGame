@@ -101,8 +101,7 @@ namespace AlgorithmLibrary
                         }
                         catch (ArgumentNullException e)
                         {
-                            Console.WriteLine($"It look like the map dosn't have {y + 1} row");
-                            throw;
+                            throw new ArgumentException($"It look like the map dosn't have {y + 1} row");
                         }
 
                         if(charasters.Length != sizeOfMap[1])
