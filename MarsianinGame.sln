@@ -3,11 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29911.84
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Algorithm", "MarsianinGame\Algorithm.csproj", "{C21AC102-8CF2-4C43-8DDC-78FC98523ECB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleUI", "ConsoleUI\ConsoleUI.csproj", "{CD08FFEF-3370-45F2-B0B3-A857051C5D43}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleUI", "ConsoleUI\ConsoleUI.csproj", "{CD08FFEF-3370-45F2-B0B3-A857051C5D43}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsUI", "WindowsFormsUI\WindowsFormsUI.csproj", "{D478C40A-F77A-4BCF-B768-A1BE5D7393D8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DE70BEDE-624F-4B76-851B-E07FB35AC580} = {DE70BEDE-624F-4B76-851B-E07FB35AC580}
+		{CD08FFEF-3370-45F2-B0B3-A857051C5D43} = {CD08FFEF-3370-45F2-B0B3-A857051C5D43}
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsUI", "WindowsFormsUI\WindowsFormsUI.csproj", "{A265F245-6E0D-4A6F-9A98-EEB08B0E0065}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlgorithmLibrary", "AlgorithmLibrary\AlgorithmLibrary.csproj", "{DE70BEDE-624F-4B76-851B-E07FB35AC580}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,18 +19,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C21AC102-8CF2-4C43-8DDC-78FC98523ECB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C21AC102-8CF2-4C43-8DDC-78FC98523ECB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C21AC102-8CF2-4C43-8DDC-78FC98523ECB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C21AC102-8CF2-4C43-8DDC-78FC98523ECB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CD08FFEF-3370-45F2-B0B3-A857051C5D43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CD08FFEF-3370-45F2-B0B3-A857051C5D43}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD08FFEF-3370-45F2-B0B3-A857051C5D43}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD08FFEF-3370-45F2-B0B3-A857051C5D43}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A265F245-6E0D-4A6F-9A98-EEB08B0E0065}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A265F245-6E0D-4A6F-9A98-EEB08B0E0065}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A265F245-6E0D-4A6F-9A98-EEB08B0E0065}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A265F245-6E0D-4A6F-9A98-EEB08B0E0065}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D478C40A-F77A-4BCF-B768-A1BE5D7393D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D478C40A-F77A-4BCF-B768-A1BE5D7393D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D478C40A-F77A-4BCF-B768-A1BE5D7393D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D478C40A-F77A-4BCF-B768-A1BE5D7393D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE70BEDE-624F-4B76-851B-E07FB35AC580}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE70BEDE-624F-4B76-851B-E07FB35AC580}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE70BEDE-624F-4B76-851B-E07FB35AC580}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE70BEDE-624F-4B76-851B-E07FB35AC580}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

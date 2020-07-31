@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Algorithm
+namespace AlgorithmLibrary
 {
     /// <summary>
     /// Tools for a map.
@@ -11,6 +11,11 @@ namespace Algorithm
     /// <remarks>Use WritePointInConsole for debugging</remarks>
     public class Maps
     {
+        public static readonly char[] DOORS = { 'A', 'B', 'C', 'E', 'D' };
+        public static readonly char[] KEYS = { 'a', 'b', 'c', 'e', 'd' };
+        public static readonly char[] FIRE_POWER = { '1', '2', '3', '4', '5' };
+        public const char MEDKIT = 'H';
+        
         public Maps(string nameOfMap)
         {
             Map = ReadTxt(nameOfMap);
@@ -68,20 +73,48 @@ namespace Algorithm
                 using (StreamReader myFile = new StreamReader(nameOfMap))
                 {
                     // Пытаюсь получить размер карты
-                    int[] sizeOfMap = Array.ConvertAll(myFile.ReadLine().Split(' '), int.Parse);
-                    if(sizeOfMap.Length > 2)
+                    int[] sizeOfMap = null;
+                    try
                     {
-                        throw new System.ArgumentException("There are excess numbers in the first string", "nameOfMap");
+                        sizeOfMap = Array.ConvertAll(myFile.ReadLine().Split(' '), int.Parse);
+                    }
+                    catch (System.FormatException e)
+                    {
+                        Console.WriteLine($"It look like you have excess spacebar in the first line!");
+                        throw;
                     }
                     map = new char[sizeOfMap[0], sizeOfMap[1]]; // y and x
                     // Заполняю карту из .txt документа
                     for (int y = 0; y < sizeOfMap[0]; y++)
                     {
-                        char[] charasters = Array.ConvertAll(myFile.ReadLine().Split(' '), char.Parse); // строка, которая будет разбита на символы
+                        char[] charasters = null;
+                        try
+                        {
+                            string line = myFile.ReadLine();
+                            if(line == null)
+                            {
+                                throw new ArgumentNullException();
+                            }
+                            // строка, которая будет разбита на символы
+                            charasters = Array.ConvertAll(line.Split(' '), char.Parse);
+                        }
+                        catch (ArgumentNullException e)
+                        {
+                            Console.WriteLine($"It look like the map dosn't have {y + 1} row");
+                            throw;
+                        }
+                        catch (System.FormatException e)
+                        {
+                            Console.WriteLine($"It look like you have excess spacebar in the {y+1} row");
+                            throw;
+                        }
+
                         for (int x = 0; x < sizeOfMap[1]; x++)
                         {
                             map[y, x] = charasters[x];
                         }
+
+                        
                     }
                 }
                 
@@ -100,9 +133,9 @@ namespace Algorithm
         /// <returns>Returns position of the element.</returns>
         public Point ReturnAnElementPosition(char element)
         {
-            for (int y = 0; y < Map.GetLength(1); y++)
+            for (int y = 0; y < Map.GetLength(0); y++)
             {
-                for (int x = 0; x < Map.GetLength(0); x++)
+                for (int x = 0; x < Map.GetLength(1); x++)
                 {
                     if (Map[y, x] == element)
                     {
@@ -120,10 +153,11 @@ namespace Algorithm
         /// <returns>Return an array of positions of the elements.</returns>
         public Point[] ReturnElementsPositions(char element)
         {
+  
             List<Point> result = new List<Point>();
-            for (int y = 0; y < Map.GetLength(1); y++)
+            for (int y = 0; y < Map.GetLength(0); y++)
             {
-                for (int x = 0; x < Map.GetLength(0); x++)
+                for (int x = 0; x < Map.GetLength(1); x++)
                 {
                     if (Map[y, x] == element)
                     {
@@ -173,7 +207,7 @@ namespace Algorithm
                 if(ReturnObject(leftPoint) != 'X')
                     neigbours.Add(leftPoint);
             }
-            if (point.X != Map.GetLength(0) - 1)
+            if (point.X != Map.GetLength(1) - 1)
             {
                 Point rightPoint = new Point(point, 1, Point.Key.X);
                 if (ReturnObject(rightPoint) != 'X')
@@ -185,7 +219,7 @@ namespace Algorithm
                 if (ReturnObject(upperPoint) != 'X')
                     neigbours.Add(upperPoint);
             }
-            if (point.Y != Map.GetLength(1) - 1)
+            if (point.Y != Map.GetLength(0) - 1)
             {
                 Point belowPoint = new Point(point, 1, Point.Key.Y);
                 if (ReturnObject(belowPoint) != 'X')

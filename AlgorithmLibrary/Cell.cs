@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Algorithm
+namespace AlgorithmLibrary
 {
     public class Cell : IEquatable<Cell>
     {

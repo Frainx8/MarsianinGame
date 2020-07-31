@@ -1,21 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
-namespace Algorithm
+namespace AlgorithmLibrary
 {
     public class Algorithm
     {
         public Point[] Result { get; private set; }
+        public string Directions { get; private set; }
 
         private Maps map;
 
         private const int POINTSRANGE = 1;
 
-        private static readonly char[] DOORS = { 'A', 'B', 'C', 'E', 'D' };
-        private static readonly char[] KEYS = { 'a', 'b', 'c', 'e', 'd' };
-        private static readonly char[] FIRE_POWER = { '1', '2', '3', '4', '5' };
-        private const char MEDKIT = 'H';
         private const int MAX_XP = 100;
         private int currentXP = MAX_XP;
         
@@ -24,6 +22,42 @@ namespace Algorithm
             this.map = map;
 
             Result = DoAlgorithm();
+
+            Directions = WriteDirections(Result);
+        }
+
+        private string WriteDirections(Point[] path)
+        {
+            StringBuilder directions = new StringBuilder();
+            for(int i = 0; i < path.Count() - 1; i++)
+            {
+                Point thisPoint = path[i];
+                Point nextPoint = path[i + 1];
+
+                ComparePoint(thisPoint, nextPoint);
+            }
+
+            return directions.ToString();
+
+            void ComparePoint(Point thisPoint, Point nextPoint)
+            {
+                if(thisPoint.X > nextPoint.X)
+                {
+                    directions.Append('L');
+                }
+                else if (thisPoint.X < nextPoint.X)
+                {
+                    directions.Append('R');
+                }
+                else if(thisPoint.Y > nextPoint.Y)
+                {
+                    directions.Append('U');
+                }
+                else if(thisPoint.Y < nextPoint.Y)
+                {
+                    directions.Append('D');
+                }
+            }
         }
 
         private Point[] DoAlgorithm()
@@ -32,9 +66,9 @@ namespace Algorithm
             //FIRST step - find the way to the Q through doors.
             Point[] firstStep = FindPath(map.ReturnAnElementPosition('S'), map.ReturnAnElementPosition('Q'));
 
-            if(firstStep.Equals(Point.nullPoint))
+            if(firstStep == null)
             {
-                throw new ArgumentException("There are no way to the Q!", "firstStep");
+                throw new ArgumentException("There are no way to the Q! (FirstStep)");
             }
             #endregion
 
@@ -68,9 +102,9 @@ namespace Algorithm
                     //Find a way to the key.
                     Point[] tempPathToTheKey = FindPath(notVisitedDoor, map.ReturnAnElementPosition(doorKey));
 
-                    if (tempPathToTheKey.Equals(Point.nullPoint))
+                    if (tempPathToTheKey == null)
                     {
-                        throw new ArgumentException("There are no way to the Q!", "tempPathToTheNotVisitedDoor");
+                        throw new ArgumentException("There are no way to the Q! (SecondStep)");
                     }
 
                     //Check if there is any door in the key way.
@@ -130,7 +164,7 @@ namespace Algorithm
                     //there are doors in the ways - it's impossible to reach Q.
                     if (numberOfStepsToKeys.Any() == false)
                     {
-                        throw new ArgumentException("There are no way to the Q!", "numberOfStepsToKeys");
+                        throw new ArgumentException("There are no way to the Q! (Third step)");
                     }
                     //Searching for a key with the minimal number of steps.
                     goal = numberOfStepsToKeys.First().Key;
@@ -272,7 +306,7 @@ namespace Algorithm
                 foreach (Point neighbor in neighbors)
                 {
                     Cell newCell = new Cell(neighbor, current.G + POINTSRANGE, current);
-                    if (map.ReturnObject(newCell.Point) == MEDKIT)
+                    if (map.ReturnObject(newCell.Point) == Maps.MEDKIT)
                         return newCell.Point;
                     if (closedList.Contains(newCell) == false)
                     {
@@ -339,7 +373,7 @@ namespace Algorithm
                 char tempObject = map.ReturnObject(position);
                 if (tempObject == '.')
                     continue;
-                else if (DOORS.Contains(tempObject))
+                else if (Maps.DOORS.Contains(tempObject))
                 {
                     if(result.Contains(position) != true)
                     {
@@ -357,7 +391,7 @@ namespace Algorithm
                 char tempObject = map.ReturnObject(position);
                 if (tempObject == '.')
                     continue;
-                else if (DOORS.Contains(tempObject))
+                else if (Maps.DOORS.Contains(tempObject))
                 {
                     return true;
                 }
@@ -486,18 +520,23 @@ namespace Algorithm
                 Point positionInTheWay = path[i];
                 char tempObject = map.ReturnObject(positionInTheWay);
 
-                if (KEYS.Contains(tempObject))
+                if(tempObject == '.' || tempObject == 'S' || tempObject == 'Q')
+                {
+                    continue;
+                }
+
+                else if (Maps.KEYS.Contains(tempObject))
                 {
                     Point doorP = DeleteDoorAndKey(positionInTheWay, tempObject);
                     tempObjects.Add(positionInTheWay, tempObject);
                     tempObjects.Add(doorP, map.ReturnObject(doorP));
                 }
-                if (MEDKIT == tempObject)
+                else if (Maps.MEDKIT == tempObject)
                 {
                     UseMedkit(positionInTheWay);
                     tempObjects.Add(positionInTheWay, tempObject);
                 }
-                if (FIRE_POWER.Contains(tempObject))
+                else if (Maps.FIRE_POWER.Contains(tempObject))
                 {
 
                     bool IsDie = GetDamage((int)Char.GetNumericValue(tempObject));
@@ -514,13 +553,17 @@ namespace Algorithm
                         return pointBeforeDiePoint;
                     }
                 }
+                else
+                {
+                    throw new ArgumentException("There is something unknown in the way!", $"{tempObject}");
+                }
             }
             return Point.nullPoint;
         }
 
         private Point[] FindWayToNearestMedkit(Point currentPosition, Point pointBeforeDiePoint)
         {
-            Point[] medkitsPositions = map.ReturnElementsPositions(MEDKIT);
+            Point[] medkitsPositions = map.ReturnElementsPositions(Maps.MEDKIT);
             Dictionary<Point, int> closestMedkit = ReturnClosestObjects(pointBeforeDiePoint, medkitsPositions);
             foreach(Point medkitPosition in closestMedkit.Keys)
             {
