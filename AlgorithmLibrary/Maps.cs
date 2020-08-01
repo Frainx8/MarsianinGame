@@ -41,6 +41,11 @@ namespace AlgorithmLibrary
             return Map[point.Y, point.X];
         }
 
+        public char ReturnObject(int x, int y)
+        {
+            return Map[y, x];
+        }
+
         /// <summary>
         /// Deleting an object in the map, replacing it with a dot.
         /// </summary>

@@ -17,10 +17,7 @@ namespace WindowsFormsUI
         /// 
         static string consoleExePath = @"console\solution.exe";
         private static string mapName = @"maps\map.txt";
-        private const int SLEEP_TIME = 200;
-        private static Maps AlgorithmMap;
-        private static Maps myMap;
-        private static Algorithm algorithm;
+        
         [STAThread]
         static void Main(string[] args)
         {
@@ -58,13 +55,11 @@ namespace WindowsFormsUI
                     mapName = $"maps/{args[0]}";
                 }
 
-                AlgorithmMap = new Maps(mapName);
-                myMap = new Maps(mapName);
-                algorithm = new Algorithm(AlgorithmMap);
-
                 Application.SetHighDpiMode(HighDpiMode.SystemAware);
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
+                //Application.Run(new MainForm(mapName));
+                Application.Run(new GameForm(mapName));
             }
             
         }

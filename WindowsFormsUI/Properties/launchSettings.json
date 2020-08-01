@@ -1,8 +1,7 @@
 {
   "profiles": {
     "WindowsFormsUI": {
-      "commandName": "Project",
-      "commandLineArgs": "-console map3.txt"
+      "commandName": "Project"
     }
   }
 }
