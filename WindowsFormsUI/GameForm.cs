@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using AlgorithmLibrary;
 
@@ -11,30 +13,18 @@ namespace WindowsFormsUI
 {
     public partial class GameForm : Form
     {
-        private const int SLEEP_TIME = 200;
+        private const int SLEEP_TIME = 300;
         private Maps AlgorithmMap;
         private Maps myMap;
         private Algorithm algorithm;
         private string mapName;
         private PictureBox[,] pictureBoxes;
-        #region Images
-        private Bitmap imageWall = Properties.Resources.wall;
-        private Bitmap imageCardA = Properties.Resources.cardA;
-        private Bitmap imageCardB = Properties.Resources.cardB;
-        private Bitmap imageCardC = Properties.Resources.cardC;
-        private Bitmap imageCardD = Properties.Resources.cardD;
-        private Bitmap imageCardE = Properties.Resources.cardE;
-        private Bitmap imageDoorA = Properties.Resources.doorA;
-        private Bitmap imageDoorB = Properties.Resources.DoorB;
-        private Bitmap imageDoorC = Properties.Resources.DoorC;
-        private Bitmap imageDoorD = Properties.Resources.DoorD;
-        private Bitmap imageDoorE = Properties.Resources.DoorE;
-        private Bitmap imageFire = Properties.Resources.fire;
-        private Bitmap imageFloor = Properties.Resources.floor;
-        private Bitmap imageMedkit = Properties.Resources.medkit;
-        private Bitmap imageQuit = Properties.Resources.quit;
-        private Bitmap imageSpawn = Properties.Resources.spawn;
-        #endregion
+        private FlowLayoutPanel[] FlowLayoutPanels;
+        private const int SIZE_OF_IMAGE_X = 40;
+        private const int SIZE_OF_IMAGE_Y = 40;
+        private Bitmap doomBoy = Properties.Resources.doomBoyDown;
+        
+        
         public GameForm()
         {
             InitializeComponent();
@@ -48,25 +38,68 @@ namespace WindowsFormsUI
 
         private void GameForm_Load(object sender, EventArgs e)
         {
+            LoadMap();
+
+            ShowResult();
+        }
+
+        private async void ShowResult()
+        {
+            PictureBox tempPicture = pictureBoxes[algorithm.Result[0].Y, algorithm.Result[0].X];
+            AlgorithmLibrary.Point tempPoint = algorithm.Result[0];
+            foreach (AlgorithmLibrary.Point point in algorithm.Result)
+            {
+                
+                FlowLayoutPanels[tempPoint.Y].Controls.RemoveAt(tempPoint.X);
+
+                FlowLayoutPanels[tempPoint.Y].Controls.Add(tempPicture);
+                FlowLayoutPanels[tempPoint.Y].Controls.SetChildIndex(tempPicture, tempPoint.X);
+
+                pictureBoxes[tempPoint.Y, tempPoint.X] = tempPicture;
+
+                tempPicture = pictureBoxes[point.Y, point.X];
+                tempPoint = point;
+                int currentIndex = point.X;
+
+                FlowLayoutPanels[point.Y].Controls.RemoveAt(currentIndex);
+
+                PictureBox newPicture = CreateNewPictureBox(doomBoy, SIZE_OF_IMAGE_X, SIZE_OF_IMAGE_Y);
+                newPicture.Margin = new Padding(0);
+
+                pictureBoxes[point.Y, point.X] = newPicture;
+
+                FlowLayoutPanels[point.Y].Controls.Add(newPicture);
+                FlowLayoutPanels[point.Y].Controls.SetChildIndex(newPicture, currentIndex);
+
+
+                await Task.Delay(SLEEP_TIME);
+
+            }
+        }
+
+        private void LoadMap()
+        {
             AlgorithmMap = new Maps(mapName);
             algorithm = new Algorithm(AlgorithmMap);
             myMap = new Maps(mapName);
 
             pictureBoxes = new PictureBox[myMap.Map.GetLength(0), myMap.Map.GetLength(1)];
+            FlowLayoutPanels = new FlowLayoutPanel[myMap.Map.GetLength(0)];
 
             for (int y = 0; y < myMap.Map.GetLength(0); y++)
             {
                 FlowLayoutPanel flowLayoutPanel = new FlowLayoutPanel();
+                FlowLayoutPanels[y] = flowLayoutPanel;
                 flowLayoutPanel.FlowDirection = FlowDirection.LeftToRight;
                 flowLayoutPanel.Margin = new Padding(0);
                 flowLayoutPanel.AutoSize = true;
                 for (int x = 0; x < myMap.Map.GetLength(1); x++)
                 {
                     char tempObject = myMap.ReturnObject(x, y);
-                    PictureBox pictureBox = CreateNewPictureBox(ReturnImage(tempObject), 40, 40);
+                    PictureBox pictureBox = CreateNewPictureBox(ReturnImage(tempObject), SIZE_OF_IMAGE_X, SIZE_OF_IMAGE_Y);
                     pictureBox.Margin = new Padding(0);
                     flowLayoutPanel.Controls.Add(pictureBox);
-                    pictureBoxes[y,x] = pictureBox;
+                    pictureBoxes[y, x] = pictureBox;
                 }
                 mainFlowPanel.Controls.Add(flowLayoutPanel);
             }
@@ -88,43 +121,43 @@ namespace WindowsFormsUI
             switch(_object)
             {
                 case '.':
-                    return imageFloor;
+                    return Properties.Resources.floor;
                 case 'X':
-                    return imageWall;
+                    return Properties.Resources.wall;
                 case 'a':
-                    return imageCardA;
+                    return Properties.Resources.cardA;
                 case 'b':
-                    return imageCardB;
+                    return Properties.Resources.cardB;
                 case 'c':
-                    return imageCardC;
+                    return Properties.Resources.cardC;
                 case 'd':
-                    return imageCardD;
+                    return Properties.Resources.cardD;
                 case 'e':
-                    return imageCardE;
+                    return Properties.Resources.cardE;
                 case 'A':
-                    return imageDoorA;
+                    return Properties.Resources.doorA;
                 case 'B':
-                    return imageDoorB;
+                    return Properties.Resources.DoorB;
                 case 'C':
-                    return imageDoorC;
+                    return Properties.Resources.DoorC;
                 case 'D':
-                    return imageDoorD;
+                    return Properties.Resources.DoorD;
                 case 'E':
-                    return imageDoorE;
+                    return Properties.Resources.DoorE;
                 case 'S':
-                    return imageSpawn;
+                    return Properties.Resources.spawn;
                 case 'Q':
-                    return imageQuit;
+                    return Properties.Resources.quit;
                 case 'H':
-                    return imageMedkit;  
+                    return Properties.Resources.medkit;
                 case '1':
                 case '2':
                 case '3':
                 case '4':
                 case '5':
-                    return imageFire;
+                    return Properties.Resources.fire;
                 default:
-                    return null;
+                    return Properties.Resources.unknown;
             }
         }
     }

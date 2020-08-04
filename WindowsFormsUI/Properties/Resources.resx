@@ -166,4 +166,22 @@
   <data name="wall" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\wall.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="doomBoyDead" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\doomboydead.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="doomBoyDown" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\doomboydown.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="doomBoyLeft" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\doomboyleft.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="doomBoyRight" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\doomboyright.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="doomBoyUp" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\doomboyup.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="unknown" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\unknown.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>
