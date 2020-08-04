@@ -44,5 +44,10 @@ namespace AlgorithmLibrary
                 sw.WriteLine(ex);
             }
         }
+
+        public static void WriteStringInTheConsole(string _string)
+        {
+            System.Diagnostics.Trace.WriteLine(_string);
+        }
     }
 }
