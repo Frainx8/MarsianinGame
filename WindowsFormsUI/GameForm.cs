@@ -19,10 +19,16 @@ namespace WindowsFormsUI
         private Algorithm algorithm;
         private string mapName;
         private PictureBox[,] pictureBoxes;
-        private FlowLayoutPanel[] FlowLayoutPanels;
+        private MyFlowLayoutPanel[] FlowLayoutPanels;
         private const int SIZE_OF_IMAGE_X = 40;
         private const int SIZE_OF_IMAGE_Y = 40;
         private Bitmap doomBoy = Properties.Resources.doomBoyDown;
+        private event EventHandler<GameCompleteArgs> GameCompleteEvent;
+        private class GameCompleteArgs : EventArgs
+        {
+            public string Result { get; set; }
+        }
+
         
         
         public GameForm()
@@ -40,41 +46,63 @@ namespace WindowsFormsUI
         {
             LoadMap();
 
-            ShowResult();
+            GameCompleteEvent += GameComplete;
+
+            ShowCharactersMovement();
+        }
+        private void GameComplete(object sender, GameCompleteArgs e)
+        {
+            if(e.Result == "Complete")
+            {
+                MessageBox.Show("Level complete!", "Result", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
-        private async void ShowResult()
+        private async void ShowCharactersMovement()
         {
             PictureBox tempPicture = pictureBoxes[algorithm.Result[0].Y, algorithm.Result[0].X];
             AlgorithmLibrary.Point tempPoint = algorithm.Result[0];
             foreach (AlgorithmLibrary.Point point in algorithm.Result)
             {
-                
-                FlowLayoutPanels[tempPoint.Y].Controls.RemoveAt(tempPoint.X);
-
-                FlowLayoutPanels[tempPoint.Y].Controls.Add(tempPicture);
-                FlowLayoutPanels[tempPoint.Y].Controls.SetChildIndex(tempPicture, tempPoint.X);
+                foreach (Control c in FlowLayoutPanels[tempPoint.Y].Controls)
+                {
+                    
+                    if (c.Name == $"picture{tempPoint.X}")
+                    {
+                        PictureBox picture = (PictureBox)c;
+                        picture.Image = (Image)tempPicture.Image.Clone();
+                        c.Refresh();
+                        break;
+                    }
+                }
 
                 pictureBoxes[tempPoint.Y, tempPoint.X] = tempPicture;
 
-                tempPicture = pictureBoxes[point.Y, point.X];
+                tempPicture = CreateNewPictureBox(pictureBoxes[point.Y, point.X]);
                 tempPoint = point;
-                int currentIndex = point.X;
-
-                FlowLayoutPanels[point.Y].Controls.RemoveAt(currentIndex);
 
                 PictureBox newPicture = CreateNewPictureBox(doomBoy, SIZE_OF_IMAGE_X, SIZE_OF_IMAGE_Y);
                 newPicture.Margin = new Padding(0);
 
                 pictureBoxes[point.Y, point.X] = newPicture;
 
-                FlowLayoutPanels[point.Y].Controls.Add(newPicture);
-                FlowLayoutPanels[point.Y].Controls.SetChildIndex(newPicture, currentIndex);
+                foreach (Control c in FlowLayoutPanels[point.Y].Controls)
+                {
+                    if (c.Name == $"picture{point.X}")
+                    {
+                        PictureBox picture = (PictureBox)c;
 
+                        picture.Image = (Image)newPicture.Image.Clone();
+                        c.Refresh();
+                        break;
+                    }
+                }
 
                 await Task.Delay(SLEEP_TIME);
-
+                
             }
+
+            GameCompleteEvent?.Invoke(this, new GameCompleteArgs() { Result = "Complete" });
         }
 
         private void LoadMap()
@@ -84,11 +112,12 @@ namespace WindowsFormsUI
             myMap = new Maps(mapName);
 
             pictureBoxes = new PictureBox[myMap.Map.GetLength(0), myMap.Map.GetLength(1)];
-            FlowLayoutPanels = new FlowLayoutPanel[myMap.Map.GetLength(0)];
+            FlowLayoutPanels = new MyFlowLayoutPanel[myMap.Map.GetLength(0)];
 
             for (int y = 0; y < myMap.Map.GetLength(0); y++)
             {
-                FlowLayoutPanel flowLayoutPanel = new FlowLayoutPanel();
+                MyFlowLayoutPanel flowLayoutPanel = new MyFlowLayoutPanel();
+                
                 FlowLayoutPanels[y] = flowLayoutPanel;
                 flowLayoutPanel.FlowDirection = FlowDirection.LeftToRight;
                 flowLayoutPanel.Margin = new Padding(0);
@@ -97,6 +126,7 @@ namespace WindowsFormsUI
                 {
                     char tempObject = myMap.ReturnObject(x, y);
                     PictureBox pictureBox = CreateNewPictureBox(ReturnImage(tempObject), SIZE_OF_IMAGE_X, SIZE_OF_IMAGE_Y);
+                    pictureBox.Name = $"picture{x}";
                     pictureBox.Margin = new Padding(0);
                     flowLayoutPanel.Controls.Add(pictureBox);
                     pictureBoxes[y, x] = pictureBox;
@@ -114,6 +144,16 @@ namespace WindowsFormsUI
             pictureBox.ClientSize = new Size(xSize, ySize);
             pictureBox.Image = imageToDisplay;
             return pictureBox;
+        }
+
+        private PictureBox CreateNewPictureBox(PictureBox pictureBox)
+        {
+            PictureBox newPictureBox = new PictureBox();
+            newPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+            Bitmap image = new Bitmap(pictureBox.Image);
+            newPictureBox.ClientSize = new Size(pictureBox.Size.Width, pictureBox.Size.Height);
+            newPictureBox.Image = image;
+            return newPictureBox;
         }
 
         private Bitmap ReturnImage(char _object)
