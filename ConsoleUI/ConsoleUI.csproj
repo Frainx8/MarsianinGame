@@ -6,6 +6,10 @@
     <AssemblyName>solution</AssemblyName>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>C:\Users\acer\source\repos\MarsianinGame\WindowsFormsUI\bin\Debug\netcoreapp3.1\console\</OutputPath>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\AlgorithmLibrary\AlgorithmLibrary.csproj" />
   </ItemGroup>

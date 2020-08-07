@@ -10,7 +10,7 @@ namespace ConsoleUI
     class Program
     {
 
-        private static string mapName = @"maps/map.txt";
+        private static string mapName = @"..\..\maps\map.txt";
         private const int SLEEP_TIME = 300;
         private static Maps AlgorithmMap;
         private static Maps myMap;
@@ -26,7 +26,7 @@ namespace ConsoleUI
             {
                 LoadGame(args);
 
-                WriteResultToFile();
+                algorithm.WriteResultToFile();
 
                 ShowAlgorithmResult();
 
@@ -64,7 +64,7 @@ namespace ConsoleUI
         {
             if (args.Length == 1)
             {
-                mapName = $"maps\\{args[0]}";
+                mapName = @$"..\..\maps\{args[0]}";
             }
             AlgorithmMap = new Maps(mapName);
             myMap = new Maps(mapName);
@@ -97,16 +97,7 @@ namespace ConsoleUI
                     
             }
         }
-        private static void WriteResultToFile()
-        {
-            string fileName = @"moves.txt";
-            
-            using (StreamWriter sw = new StreamWriter(fileName, false))
-            {
-                sw.WriteLine(algorithm.Directions.Length);
-                sw.WriteLine(algorithm.Directions);
-            }
-        }
+        
         private static void ShowInfo()
         {
             stepCount++;

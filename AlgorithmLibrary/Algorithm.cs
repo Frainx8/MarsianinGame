@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -60,11 +61,22 @@ namespace AlgorithmLibrary
             }
         }
 
+        public void WriteResultToFile()
+        {
+            string fileName = @"moves.txt";
+
+            using (StreamWriter sw = new StreamWriter(fileName, false))
+            {
+                sw.WriteLine(Directions.Length);
+                sw.WriteLine(Directions);
+            }
+        }
+
         private Point[] DoAlgorithm()
         {
             #region First step
             //FIRST step - find the way to the Q through doors.
-            Point[] firstStep = FindPath(map.ReturnAnElementPosition('S'), map.ReturnAnElementPosition('Q'));
+            Point[] firstStep = FindPath(map.ReturnAnElementPositionOnMap('S'), map.ReturnAnElementPositionOnMap('Q'));
 
             if(firstStep == null)
             {
@@ -100,7 +112,7 @@ namespace AlgorithmLibrary
                     char doorKey = Char.ToLower(map.ReturnObject(notVisitedDoor));
 
                     //Find a way to the key.
-                    Point[] tempPathToTheKey = FindPath(notVisitedDoor, map.ReturnAnElementPosition(doorKey));
+                    Point[] tempPathToTheKey = FindPath(notVisitedDoor, map.ReturnAnElementPositionOnMap(doorKey));
 
                     if (tempPathToTheKey == null)
                     {
@@ -124,8 +136,11 @@ namespace AlgorithmLibrary
             }
             else
             {
-                //If there is no any door in the way to Q - return it.
-                return firstStep;
+                if(IsThereFire(firstStep) == false)
+                {
+                    //If there is no any door in the way to Q - return it.
+                    return firstStep;
+                }
             }
             #endregion
 
@@ -133,13 +148,13 @@ namespace AlgorithmLibrary
             //Find closer cards, deleting the doors and escaping the fire.
 
             //Position where the 'character' is after made steps.
-            Point currentPosition = map.ReturnAnElementPosition('S');
+            Point currentPosition = map.ReturnAnElementPositionOnMap('S');
 
             //Before looping
             List<Point> allKeysInTheThirdStep = new List<Point>();
             foreach (Point door in allDoorsInTheSecondStep.Keys)
             {
-                allKeysInTheThirdStep.Add(map.ReturnAnElementPosition(Char.ToLower(map.ReturnObject(door))));
+                allKeysInTheThirdStep.Add(map.ReturnAnElementPositionOnMap(Char.ToLower(map.ReturnObject(door))));
             }
 
 
@@ -195,18 +210,17 @@ namespace AlgorithmLibrary
                 List<Point> tempPathToTheGoal2 = new List<Point>(pathToTheGoal);
 
                 bool IsDie = false;
-                
-                
 
+
+                
                 //Trying to pass to the card despite the fire and find medkits.
                 do
                 {
                     
                     Point pointBeforeDiePoint = isDeadInTheWay(tempPathToTheGoal2.ToArray());
-
                     //if pointBeforeDiePoint equals nullPoint - character not dead.
                     IsDie = !(pointBeforeDiePoint.Equals(Point.nullPoint));
-
+                    
                     if (IsDie == false)
                     {
                         if (IsChanged == true)
@@ -244,12 +258,11 @@ namespace AlgorithmLibrary
                 theWholePath.Remove(theWholePath.Last());
             }
 
-            Point[] pathToTheExit = FindPath(currentPosition, map.ReturnAnElementPosition('Q'));
+            Point[] pathToTheExit = FindPath(currentPosition, map.ReturnAnElementPositionOnMap('Q'));
 
             theWholePath.AddRange(pathToTheExit);
 
             currentPosition = pathToTheExit.Last();
-
             return theWholePath.ToArray();
             #endregion
         }
@@ -281,8 +294,9 @@ namespace AlgorithmLibrary
         /// Uses Dijkstra's algorithm to find the closest medkit.
         /// </summary>
         /// <param name="start">Start position where the search starts</param>
-        /// <returns>Return a path to the closest medkit.</returns>
-        private Point ReturnClosestMedkit(Point start, Point deathPoint)
+        /// <param name="deathPoint">Position, that doesn't include in the search. </param>
+        /// <returns>Returns a path to the closest medkit.</returns>
+        private Point ReturnClosestObject(Point start, Point deathPoint, char _object)
         {
             Cell source = new Cell(start, 0, null);
             Cell deathCell = new Cell(deathPoint, 0, null);
@@ -302,11 +316,11 @@ namespace AlgorithmLibrary
                 Cell current = query.First();
                 openList.Remove(current);
                 closedList.Add(current);
-                Point[] neighbors = map.ReturnNeighbours(current.Point).ToArray();
+                Point[] neighbors = map.ReturnNeighbours(current.Point);
                 foreach (Point neighbor in neighbors)
                 {
                     Cell newCell = new Cell(neighbor, current.G + POINTSRANGE, current);
-                    if (map.ReturnObject(newCell.Point) == Maps.MEDKIT)
+                    if (map.ReturnObject(newCell.Point) == _object)
                         return newCell.Point;
                     if (closedList.Contains(newCell) == false)
                     {
@@ -324,6 +338,15 @@ namespace AlgorithmLibrary
             }
 
             return Point.nullPoint;
+        }
+        /// <summary>
+        /// Uses Dijkstra's algorithm to find the closest object.
+        /// </summary>
+        /// <param name="start">Start position where the search starts</param>
+        /// <returns>Returns a path to the closest object.</returns>
+        private Point ReturnClosestObject(Point start, char _object)
+        {
+            return ReturnClosestObject(start, Point.nullPoint, _object);
         }
 
         /// <summary>
@@ -365,7 +388,7 @@ namespace AlgorithmLibrary
         /// </summary>
         /// <param name="thePath">Array of Points - A path for searching the doors.</param>
         /// <returns>An array of position of the founded doors.</returns>
-        private List<Point> ReturnDoorsInThePath(Point[] path)
+        private Point[] ReturnDoorsInThePath(Point[] path)
         {
             List<Point> result = new List<Point>();
             foreach (Point position in path)
@@ -381,23 +404,40 @@ namespace AlgorithmLibrary
                     }
                 }
             }
-            return result;
+            return result.ToArray();
         }
 
-        private bool IsThereDoor(Point[] path)
+        /// <summary>
+        /// Check, if there is at least one object in the path
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="_objects"></param>
+        /// <returns>Returns true if found, else false.</returns>
+        private bool IsThereObjectInWay(Point[] path, char[] _objects)
         {
             foreach (Point position in path)
             {
                 char tempObject = map.ReturnObject(position);
                 if (tempObject == '.')
                     continue;
-                else if (Maps.DOORS.Contains(tempObject))
+                else if (_objects.Contains(tempObject))
                 {
                     return true;
                 }
             }
             return false;
         }
+
+        private bool IsThereFire(Point[] path)
+        {
+            return IsThereObjectInWay(path, Maps.FIRE_POWER);
+        }
+
+        private bool IsThereDoor(Point[] path)
+        {
+            return IsThereObjectInWay(path, Maps.DOORS);
+        }
+
 
         /// <summary>
         /// Uses A* algorithm to find the shortest way to the goal.
@@ -407,20 +447,29 @@ namespace AlgorithmLibrary
         /// <returns>The array of Point from which the path is.</returns>
         private Point[] FindPath(Point start, Point goal)
         {
+            return FindPath(start, goal, Point.nullPoint);
+        }
+
+        private Point[] FindPath(Point start, Point goal, Point diePoint)
+        {
             Cell source = new Cell() { Parent = null, Point = start };
+            Cell dieCell = new Cell() { Parent = null, Point = diePoint };
             List<Cell> openList = new List<Cell>()
             {
                 source
             };
-            List<Cell> closedList = new List<Cell>();
-            while(openList.Any() == true)
+            List<Cell> closedList = new List<Cell>()
+            {
+                dieCell
+            };
+            while (openList.Any() == true)
             {
                 IEnumerable<Cell> query = openList.OrderBy(x => x.F);
                 Cell current = query.First();
                 openList.Remove(current);
                 closedList.Add(current);
-                Point[] neighbors =  map.ReturnNeighbours(current.Point).ToArray();
-                foreach(Point neighbor in neighbors)
+                Point[] neighbors = map.ReturnNeighbours(current.Point).ToArray();
+                foreach (Point neighbor in neighbors)
                 {
                     Cell newCell = new Cell(neighbor, current.G + POINTSRANGE, ReturnH(neighbor, goal), current);
                     if (newCell.Point.Equals(goal) == true)
@@ -428,10 +477,10 @@ namespace AlgorithmLibrary
                     if (closedList.Contains(newCell) == false)
                     {
 
-                        if(openList.Contains(newCell) == true)
+                        if (openList.Contains(newCell) == true)
                         {
                             int index = openList.IndexOf(newCell);
-                            if(openList[index].F > newCell.F)
+                            if (openList[index].F > newCell.F)
                             {
                                 openList.RemoveAt(index);
                                 openList.Add(newCell);
@@ -446,7 +495,7 @@ namespace AlgorithmLibrary
             }
             return null;
         }
-        
+
         /// <summary>
         /// Uses Cell's parents to get the full path.
         /// </summary>
@@ -497,7 +546,7 @@ namespace AlgorithmLibrary
         {
             map.DeleteObject(keyPosition);
             char doorC = Char.ToUpper(key);
-            Point doorP = map.ReturnAnElementPosition(doorC);
+            Point doorP = map.ReturnAnElementPositionOnMap(doorC);
             map.DeleteObject(doorP);
             return doorP;
         }
@@ -563,7 +612,7 @@ namespace AlgorithmLibrary
 
         private Point[] FindWayToNearestMedkit(Point currentPosition, Point pointBeforeDiePoint)
         {
-            Point[] medkitsPositions = map.ReturnElementsPositions(Maps.MEDKIT);
+            Point[] medkitsPositions = map.ReturnElementsPositionsOnMap(Maps.MEDKIT);
             if(medkitsPositions == null)
             {
                 throw new ArgumentException("The character died in the way!");

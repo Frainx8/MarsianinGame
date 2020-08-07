@@ -19,11 +19,11 @@ namespace AlgorithmLibrary
         public Maps(string nameOfMap)
         {
             Map = ReadTxt(nameOfMap);
-            if (IsThereElement('Q') == false)
+            if (IsThereElementOnMap('Q') == false)
             {
                 throw new System.ArgumentException("There is no exit!", "Map");
             }
-            if (IsThereElement('S') == false)
+            if (IsThereElementOnMap('S') == false)
             {
                 throw new System.ArgumentException("There is no enter!", "Map");
             }
@@ -136,7 +136,7 @@ namespace AlgorithmLibrary
         /// </summary>
         /// <param name="element"></param>
         /// <returns>Returns position of the element.</returns>
-        public Point ReturnAnElementPosition(char element)
+        public Point ReturnAnElementPositionOnMap(char element)
         {
             for (int y = 0; y < Map.GetLength(0); y++)
             {
@@ -156,7 +156,7 @@ namespace AlgorithmLibrary
         /// </summary>
         /// <param name="element"></param>
         /// <returns>Return an array of positions of the elements.</returns>
-        public Point[] ReturnElementsPositions(char element)
+        public Point[] ReturnElementsPositionsOnMap(char element)
         {
   
             List<Point> result = new List<Point>();
@@ -184,9 +184,9 @@ namespace AlgorithmLibrary
         /// </summary>
         /// <param name="element"></param>
         /// <returns>Returns true is there is the element, otherwise false.</returns>
-        public bool IsThereElement(char element)
+        public bool IsThereElementOnMap(char element)
         {
-            if (ReturnAnElementPosition(element).Equals(Point.nullPoint))
+            if (ReturnAnElementPositionOnMap(element).Equals(Point.nullPoint))
             {
                 return false;
             }
