@@ -10,7 +10,7 @@ namespace ConsoleUI
     class Program
     {
 
-        private static string mapName = @"..\..\maps\map.txt";
+        private static string mapName = @"..\..\maps\map2.txt";
         private const int SLEEP_TIME = 300;
         private static Maps AlgorithmMap;
         private static Maps myMap;

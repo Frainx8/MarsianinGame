@@ -35,6 +35,12 @@ namespace AlgorithmLibrary
             Parent = parent;
         }
 
+        public Cell(Point point, Cell parent)
+        {
+            Point = point;
+            Parent = parent;
+        }
+
         public bool Equals(Cell other)
         {
             if (other.Point.Equals(Point))

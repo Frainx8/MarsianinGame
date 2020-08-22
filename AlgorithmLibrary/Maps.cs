@@ -219,25 +219,29 @@ namespace AlgorithmLibrary
             if (point.X != 0)
             {
                 Point leftPoint = new Point(point, -1, Point.Key.X);
-                if(ReturnObject(leftPoint) != 'X' || ReturnObject(leftPoint) != '5')
+                char _point = ReturnObject(leftPoint);
+                if (_point != 'X' && _point != '5')
                     neigbours.Add(leftPoint);
             }
             if (point.X != Map.GetLength(1) - 1)
             {
                 Point rightPoint = new Point(point, 1, Point.Key.X);
-                if (ReturnObject(rightPoint) != 'X' || ReturnObject(rightPoint) != '5')
+                char _point = ReturnObject(rightPoint);
+                if (_point != 'X' && _point != '5')
                     neigbours.Add(rightPoint);
             }
             if (point.Y != 0)
             {
                 Point upperPoint = new Point(point, -1, Point.Key.Y);
-                if (ReturnObject(upperPoint) != 'X' || ReturnObject(upperPoint) != '5')
+                char _point = ReturnObject(upperPoint);
+                if (_point != 'X' && _point != '5')
                     neigbours.Add(upperPoint);
             }
             if (point.Y != Map.GetLength(0) - 1)
             {
                 Point belowPoint = new Point(point, 1, Point.Key.Y);
-                if (ReturnObject(belowPoint) != 'X' || ReturnObject(belowPoint) != '5')
+                char _point = ReturnObject(belowPoint);
+                if (_point != 'X' && _point != '5')
                     neigbours.Add(belowPoint);
             }
             return neigbours.ToArray();
