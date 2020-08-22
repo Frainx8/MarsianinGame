@@ -74,198 +74,377 @@ namespace AlgorithmLibrary
 
         private Point[] DoAlgorithm()
         {
+
+            List<Point[]> differentWaysToQ = new List<Point[]>();
+            List<Point[]> visitedWaysToQ = new List<Point[]>();
+
+            bool foundTheWay = false;
+
             #region First step
             //FIRST step - find the way to the Q through doors.
             Point[] firstStep = FindPath(map.ReturnAnElementPositionOnMap('S'), map.ReturnAnElementPositionOnMap('Q'));
 
-            if(firstStep == null)
+            if (firstStep == null)
             {
                 throw new ArgumentException("There are no way to the Q!");
             }
             #endregion
 
-            #region Second step
-            //SECOND step - find all the doors that lead to the Q.
+            differentWaysToQ.Add(firstStep);
+            visitedWaysToQ.Add(firstStep);
 
-            //Use it for all needed doors to get to Q. Bool to check if already check the way to the door.
-            Dictionary<Point, bool> allDoorsInTheSecondStep = new Dictionary<Point, bool>();
-
-            //Fill the dictionary by the path from the first step.
-            foreach (Point doorPosition in ReturnDoorsInThePath(firstStep))
+            while (foundTheWay != true)
             {
-                allDoorsInTheSecondStep.Add(doorPosition, false);
-            }
+                Point[] theWay = differentWaysToQ.Last().ToArray();
+                visitedWaysToQ.Add(differentWaysToQ.First());
+                
+                
 
-            //Check if there is at least one door in the way to Q.
-            if (allDoorsInTheSecondStep.Any() == true)
-            {
-                //looking for doors that lead to the 'main' doors from the first path
-                while (AreAllDoorsVisited(allDoorsInTheSecondStep) != true)
+                #region Second step
+                //SECOND step - find all the doors that lead to the Q.
+
+                Dictionary<Point, bool> allDoorsInTheSecondStep = null;
+
+                Point[] result = CheckDoorsInTheWay(theWay);
+                if (result != null)
                 {
-                    Point notVisitedDoor = ReturnNotVisitedDoor(allDoorsInTheSecondStep);
-                    if (notVisitedDoor.Equals(Point.nullPoint))
+                    return result;
+                }
+
+                #endregion
+
+                #region Third step
+                //Find closer cards, deleting the doors and escaping the fire.
+
+                List<Point> allKeysInTheThirdStep = new List<Point>();
+
+                //Position where the 'character' is after made steps.
+                Point currentPosition = map.ReturnAnElementPositionOnMap('S');
+
+                //Positions (cards, medkits), where the charcter were.
+                List<Point> allVisitedPositions = new List<Point>()
+                {
+                    currentPosition
+                };
+                //Objects that are found in the ways and used but recover if 'the character' died or
+                //when need to make steps back.
+                List<Dictionary<Point, char>> tempObjects = new List<Dictionary<Point, char>>();
+
+                bool IsDead = false;
+
+                result = FindCardsAndGothroughFire();
+
+                if(result == null)
+                {
+                    continue;
+                }
+
+                return result;
+
+
+                #endregion
+
+                /// <summary>
+                /// Check if the 'character' can die in the way with currentXP;
+                /// </summary>
+                /// <param name="path"></param>
+                /// <returns>If died returns point of death and point before it, else null.</returns>
+                Point[] IsDeadInTheWay(Point[] path)
+                {
+                    int tempCurrentHP = currentXP;
+                    Dictionary<Point, char> tempObjectsInThisWay = new Dictionary<Point, char>();
+
+                    for (int i = 0; i < path.Count(); i++)
                     {
-                        throw new System.ArgumentException("It is not a visited door!", "notVisitedDoor");
-                    }
-                    
+                        Point positionInTheWay = path[i];
+                        char tempObject = map.ReturnObject(positionInTheWay);
 
-                    char doorKey = Char.ToLower(map.ReturnObject(notVisitedDoor));
-
-                    //Find a way to the key.
-                    Point[] tempPathToTheKey = FindPath(notVisitedDoor, map.ReturnAnElementPositionOnMap(doorKey));
-
-                    if (tempPathToTheKey == null)
-                    {
-                        throw new ArgumentException("There are no way to the Q!");
-                    }
-
-                    //Check if there is any door in the key way.
-                    
-                    foreach (Point tempDoor in ReturnDoorsInThePath(tempPathToTheKey))
-                    {
-                        //Add another door in the dictionary if it in the way to the card and if it is not already in the dictionary.
-                        if (allDoorsInTheSecondStep.ContainsKey(tempDoor) != true)
+                        if (tempObject == '.' || tempObject == 'S' || tempObject == 'Q')
                         {
-                            allDoorsInTheSecondStep.Add(tempDoor, false);
+                            continue;
+                        }
+
+                        else if (Maps.KEYS.Contains(tempObject))
+                        {
+                            Point doorP = DeleteDoorAndKey(positionInTheWay, tempObject);
+                            tempObjectsInThisWay.Add(positionInTheWay, tempObject);
+                            tempObjectsInThisWay.Add(doorP, map.ReturnObject(doorP));
+                        }
+                        else if (Maps.MEDKIT == tempObject)
+                        {
+                            UseMedkit(positionInTheWay);
+                            tempObjectsInThisWay.Add(positionInTheWay, tempObject);
+                        }
+                        else if (Maps.FIRE_POWER.Contains(tempObject))
+                        {
+
+                            IsDead = GetDamage((int)Char.GetNumericValue(tempObject));
+                            if (IsDead == true)
+                            {
+                                IsDead = false;
+                                //Recover founded medkites, doors and cards.
+                                foreach (KeyValuePair<Point, char> _object in tempObjectsInThisWay)
+                                {
+                                    map.ChangeObject(_object.Key, _object.Value);
+                                }
+                                Point[] result = new Point[2];
+                                currentXP = tempCurrentHP;
+                                Point pointBeforeDiePoint = path[i - 1];
+                                Point diePoint = positionInTheWay;
+                                result[0] = diePoint;
+                                result[1] = pointBeforeDiePoint;
+                                return result;
+                            }
+                        }
+                        else
+                        {
+                            throw new ArgumentException("There is something unknown in the way!", $"{tempObject}");
                         }
                     }
-
-                    //This door have became visited.
-                    allDoorsInTheSecondStep[notVisitedDoor] = true;
+                    tempObjects.Add(tempObjectsInThisWay);
+                    return null;
                 }
-            }
-            else
-            {
-                if(IsThereFire(firstStep) == false)
+
+                /// <summary>
+                /// Check if there are doors in the way.
+                /// </summary>
+                /// <param name="way"></param>
+                /// <returns>Returns path, if there is no doors and fire. Otherwise null, but
+                /// keep founded doors in allDoorsInTheSecondStep.</returns>
+                Point[] CheckDoorsInTheWay(Point[] way)
                 {
-                    //If there is no any door in the way to Q - return it.
-                    return firstStep;
-                }
-            }
-            #endregion
+                    //Use it for all needed doors to get to Q. Bool to check if already check the way to the door.
+                    allDoorsInTheSecondStep = new Dictionary<Point, bool>();
 
-            #region Third step
-            //Find closer cards, deleting the doors and escaping the fire.
-
-            //Position where the 'character' is after made steps.
-            Point currentPosition = map.ReturnAnElementPositionOnMap('S');
-
-            //Before looping
-            List<Point> allKeysInTheThirdStep = new List<Point>();
-            foreach (Point door in allDoorsInTheSecondStep.Keys)
-            {
-                allKeysInTheThirdStep.Add(map.ReturnAnElementPositionOnMap(Char.ToLower(map.ReturnObject(door))));
-            }
-
-
-            //The result of the algorithm.
-            List<Point> theWholePath = new List<Point>();
-
-            while (allKeysInTheThirdStep.Any() == true)
-            {
-                //Counting steps to all keys
-                Dictionary<Point, int> numberOfStepsToKeys = ReturnClosestObjects(currentPosition, allKeysInTheThirdStep.ToArray());
-
-                //The closest available card.
-                Point goal;
-                Point[] pathToTheGoal;
-
-                bool flagIfDoor = false;
-
-                do
-                {
-                    
-                    //If all keys were deleted from the list cause
-                    //there are doors in the ways - it's impossible to reach Q.
-                    if (numberOfStepsToKeys.Any() == false)
+                    //Fill the dictionary by the path from the first step.
+                    foreach (Point doorPosition in ReturnDoorsInThePath(way))
                     {
-                        throw new ArgumentException("There are no way to the Q!");
-                    }
-                    //Searching for a key with the minimal number of steps.
-                    goal = numberOfStepsToKeys.First().Key;
-
-                    pathToTheGoal = FindPath(currentPosition, goal);
-
-                    //If there is a door - switch to another closest door.
-                    flagIfDoor = IsThereDoor(pathToTheGoal);
-
-                    if (flagIfDoor == true)
-                    {
-                        //Remove the key from the list, cause it can't be reached now.
-                        numberOfStepsToKeys.Remove(goal);
+                        allDoorsInTheSecondStep.Add(doorPosition, false);
                     }
 
-                } while (flagIfDoor == true);
-
-
-                //We got the closet availiable card.
-                //Creating two temp path to the goal for checking fire in the way.
-
-                //Keeps whole way from one card to another
-                List<Point> tempPathToTheGoal = new List<Point>(pathToTheGoal);
-                //If the 'character' died in the way - the way was changed.
-                bool IsChanged = false;
-
-                //Used for keeping goal as target of the way.
-                List<Point> tempPathToTheGoal2 = new List<Point>(pathToTheGoal);
-
-                bool IsDie = false;
-
-
-                
-                //Trying to pass to the card despite the fire and find medkits.
-                do
-                {
-                    
-                    Point pointBeforeDiePoint = isDeadInTheWay(tempPathToTheGoal2.ToArray());
-                    //if pointBeforeDiePoint equals nullPoint - character not dead.
-                    IsDie = !(pointBeforeDiePoint.Equals(Point.nullPoint));
-                    
-                    if (IsDie == false)
+                    //Check if there is at least one door in the way to Q.
+                    if (allDoorsInTheSecondStep.Any() == true)
                     {
-                        if (IsChanged == true)
+                        //looking for doors that lead to the 'main' doors from the first path
+                        while (AreAllDoorsVisited(allDoorsInTheSecondStep) != true)
                         {
-                            tempPathToTheGoal.AddRange(tempPathToTheGoal2);
+                            Point notVisitedDoor = ReturnNotVisitedDoor(allDoorsInTheSecondStep);
+                            if (notVisitedDoor.Equals(Point.nullPoint))
+                            {
+                                throw new System.ArgumentException("It is not a visited door!", "notVisitedDoor");
+                            }
+
+
+                            char doorKey = Char.ToLower(map.ReturnObject(notVisitedDoor));
+
+                            //Find a way to the key.
+                            Point[] tempPathToTheKey = FindPath(notVisitedDoor, map.ReturnAnElementPositionOnMap(doorKey));
+
+                            if (tempPathToTheKey == null)
+                            {
+                                throw new ArgumentException("There are no way to the Q!");
+                            }
+
+                            //Check if there is any door in the key way.
+
+                            foreach (Point tempDoor in ReturnDoorsInThePath(tempPathToTheKey))
+                            {
+                                //Add another door in the dictionary if it in the way to the card and if it is not already in the dictionary.
+                                if (allDoorsInTheSecondStep.ContainsKey(tempDoor) != true)
+                                {
+                                    allDoorsInTheSecondStep.Add(tempDoor, false);
+                                }
+                            }
+
+                            //This door have became visited.
+                            allDoorsInTheSecondStep[notVisitedDoor] = true;
                         }
                     }
                     else
                     {
-                        
-                        if (IsChanged == false)
+                        if (IsThereFire(way) == false)
                         {
-                            tempPathToTheGoal = new List<Point>(FindWayToNearestMedkit(currentPosition, pointBeforeDiePoint));
-                            IsChanged = true;
+                            //If there is no any door in the way to Q - return it.
+                            return way;
+                        }
+                    }
+
+                    return null;
+                }
+
+                Point[] FindCardsAndGothroughFire()
+                {
+                    if (allDoorsInTheSecondStep.Any())
+                    {
+                        //Before looping
+                        foreach (Point door in allDoorsInTheSecondStep.Keys)
+                        {
+                            allKeysInTheThirdStep.Add(map.ReturnAnElementPositionOnMap(Char.ToLower(map.ReturnObject(door))));
+                        }
+
+                        //The result of the algorithm.
+                        List<Point> theWholePath = new List<Point>();
+
+                        while (allKeysInTheThirdStep.Any() == true)
+                        {
+                            //Counting steps to all keys
+                            Dictionary<Point, int> numberOfStepsToKeys = ReturnClosestObjects(currentPosition, allKeysInTheThirdStep.ToArray());
+
+                            //The closest available card.
+                            Point goal;
+                            Point[] pathToTheGoal;
+
+                            bool flagIfDoor = false;
+
+                            do
+                            {
+
+                                //If all keys were deleted from the list cause
+                                //there are doors in the ways - it's impossible to reach Q.
+                                if (numberOfStepsToKeys.Any() == false)
+                                {
+                                    throw new ArgumentException("There are no way to the Q!");
+                                }
+                                //Searching for a key with the minimal number of steps.
+                                goal = numberOfStepsToKeys.First().Key;
+
+                                pathToTheGoal = FindPath(currentPosition, goal);
+
+                                //If there is a door - switch to another closest door.
+                                flagIfDoor = IsThereDoor(pathToTheGoal);
+
+                                if (flagIfDoor == true)
+                                {
+                                    //Remove the key from the list, cause it can't be reached now.
+                                    numberOfStepsToKeys.Remove(goal);
+                                }
+
+                            } while (flagIfDoor == true);
+
+
+                            //We got the closet availiable card.
+                            //Creating two temp path to the goal for checking fire in the way.
+
+                            //Keeps whole way from one card to another
+                            List<Point> tempPathToTheGoal = new List<Point>(pathToTheGoal);
+                            //If the 'character' died in the way - the way was changed.
+                            bool IsChanged = false;
+
+                            //Used for keeping goal as target of the way.
+                            List<Point> tempPathToTheGoal2 = new List<Point>(pathToTheGoal);
+
+
+
+
+
+                            //Trying to pass to the card despite the fire and find medkits.
+                            do
+                            {
+                                IsDead = false;
+                                Point[] resultOfIsDeadInTheWay = IsDeadInTheWay(tempPathToTheGoal2.ToArray());
+                                if (resultOfIsDeadInTheWay != null)
+                                {
+                                    Point pointBeforeDiePoint = resultOfIsDeadInTheWay[1];
+                                }
+                                else
+                                {
+                                    IsDead = true;
+                                }
+
+                                if (IsDead == false)
+                                {
+                                    if (IsChanged == true)
+                                    {
+                                        tempPathToTheGoal.AddRange(tempPathToTheGoal2);
+                                    }
+                                }
+                                else
+                                {
+
+                                    if (IsChanged == false)
+                                    {
+                                        tempPathToTheGoal = new List<Point>(FindWayToNearestMedkit(currentPosition, pointBeforeDiePoint));
+                                        IsChanged = true;
+                                    }
+                                    else
+                                    {
+                                        tempPathToTheGoal.AddRange(FindWayToNearestMedkit(currentPosition, pointBeforeDiePoint));
+                                    }
+                                    currentPosition = tempPathToTheGoal.Last();
+                                    tempPathToTheGoal.Remove(tempPathToTheGoal.Last());
+                                    tempPathToTheGoal2 = new List<Point>(FindPath(currentPosition, goal));
+                                }
+                            } while (IsDead == true);
+
+                            if (tempPathToTheGoal.SequenceEqual(pathToTheGoal) == false)
+                            {
+                                pathToTheGoal = tempPathToTheGoal.ToArray();
+                            }
+
+                            //Remove the key from the goal list.
+                            allKeysInTheThirdStep.Remove(goal);
+                            currentPosition = pathToTheGoal.Last();
+                            theWholePath.AddRange(pathToTheGoal);
+                            theWholePath.Remove(theWholePath.Last());
+                        }
+
+                        Point[] pathToTheExit = FindPath(currentPosition, map.ReturnAnElementPositionOnMap('Q'));
+
+                        theWholePath.AddRange(pathToTheExit);
+
+                        currentPosition = pathToTheExit.Last();
+                        return theWholePath.ToArray();
+
+                    }
+                    else
+                    {
+                        //If we didn't find a door but found fire - check if die in the way.
+                        Point[] resultOfIsDeadInTheWay = IsDeadInTheWay(theWay);
+
+                        if (resultOfIsDeadInTheWay != null)
+                        {
+                            IsDead = true;
                         }
                         else
                         {
-                            tempPathToTheGoal.AddRange(FindWayToNearestMedkit(currentPosition, pointBeforeDiePoint));
+                            return theWay;
                         }
-                        currentPosition = tempPathToTheGoal.Last();
-                        tempPathToTheGoal.Remove(tempPathToTheGoal.Last());
-                        tempPathToTheGoal2 = new List<Point>(FindPath(currentPosition, goal));
+                        if (IsDead == true)
+                        {
+                            //NOTE I don't know when to use it.
+                            differentWaysToQ.Remove(differentWaysToQ.First());
+                            
+                            //If die - try to find to another way to Q and a closest medkit.
+                            Point[] resultOfFindDifferentPathToQ = FindPath(currentPosition, map.Q, visitedWaysToQ.ToArray());
+                            if (resultOfFindDifferentPathToQ != null)
+                            {
+                                if(visitedWaysToQ.Contains(resultOfFindDifferentPathToQ) != true)
+                                {
+                                    differentWaysToQ.Add(resultOfFindDifferentPathToQ);
+                                    return null;
+                                }
+                            }
+                            //TODO Remove it from here!!
+                            List<Point> wayToMedkit = new List<Point>(ReturnWayToFirstClosestMedkit(currentPosition, resultOfIsDeadInTheWay[1]));
+                            currentPosition = wayToMedkit.Last();
+                            allVisitedPositions.Add(currentPosition);
+                            wayToMedkit.Remove(wayToMedkit.Last());
+
+                            wayToMedkit.AddRange(FindPath(currentPosition, map.ReturnAnElementPositionOnMap('Q')));
+                        }
+                        else
+                        {
+                            //if didn't die - return path.
+                            return firstStep;
+                        }
+
                     }
-                } while (IsDie == true);
-
-                if (tempPathToTheGoal.SequenceEqual(pathToTheGoal) == false)
-                {
-                    pathToTheGoal = tempPathToTheGoal.ToArray();
                 }
-
-                //Remove the key from the goal list.
-                allKeysInTheThirdStep.Remove(goal);
-                currentPosition = pathToTheGoal.Last();
-                theWholePath.AddRange(pathToTheGoal);
-                theWholePath.Remove(theWholePath.Last());
             }
-
-            Point[] pathToTheExit = FindPath(currentPosition, map.ReturnAnElementPositionOnMap('Q'));
-
-            theWholePath.AddRange(pathToTheExit);
-
-            currentPosition = pathToTheExit.Last();
-            return theWholePath.ToArray();
-            #endregion
+            
         }
+
+        
 
         /// <summary>
         /// Take damage using currentXP.
@@ -449,19 +628,29 @@ namespace AlgorithmLibrary
         {
             return FindPath(start, goal, Point.nullPoint);
         }
-
-        private Point[] FindPath(Point start, Point goal, Point diePoint)
+        /// <summary>
+        /// Uses A* algorithm to find the shortest way to the goal.
+        /// </summary>
+        /// <param name="start">The start Point.</param>
+        /// <param name="goal">The destiny point.</param>
+        /// <returns>The array of Point from which the path is.</returns>
+        private Point[] FindPath(Point start, Point goal, Point[] diePoints)
         {
             Cell source = new Cell() { Parent = null, Point = start };
-            Cell dieCell = new Cell() { Parent = null, Point = diePoint };
+            Cell[] dieCells = new Cell[diePoints.Length];
+
+            int i = 0;
+            foreach (Point diePoint in diePoints)
+            {
+                dieCells[i] = new Cell() { Parent = null, Point = diePoint };
+                i++;
+            }
+            
             List<Cell> openList = new List<Cell>()
             {
                 source
             };
-            List<Cell> closedList = new List<Cell>()
-            {
-                dieCell
-            };
+            List<Cell> closedList = new List<Cell>(dieCells);
             while (openList.Any() == true)
             {
                 IEnumerable<Cell> query = openList.OrderBy(x => x.F);
@@ -495,6 +684,91 @@ namespace AlgorithmLibrary
             }
             return null;
         }
+        /// <summary>
+        /// Uses A* algorithm to find the shortest way to the goal.
+        /// </summary>
+        /// <param name="start">The start Point.</param>
+        /// <param name="goal">The destiny point.</param>
+        /// <returns>The array of Point from which the path is.</returns>
+        private Point[] FindPath(Point start, Point goal, Point diePoint)
+        {
+            return FindPath(start, goal, new Point[] { diePoint });
+        }
+        /// <summary>
+        /// Uses Dijkstra's algorithm to find shortest way to the goal, trying not include visited ways.
+        /// </summary>
+        /// <param name="start">Start position where the search starts</param>
+        /// <param name="arrayOfPaths">Array of visited paths.</param>
+        /// <returns>Returns a closest path to the goal.</returns>
+        private Point[] FindPath(Point start, Point goal, Point[][] arrayOfPaths)
+        {
+            Cell source = new Cell(start, 0, null);
+            List<Cell> openList = new List<Cell>()
+            {
+                source,
+
+            };
+
+            int numberOfCells = 0;
+            for (int i = 0; i < arrayOfPaths.Length; i++)
+            {
+                for (int j = 0; j < arrayOfPaths[i].Length; j++)
+                {
+                    numberOfCells++;
+                }
+            }
+
+            Point[] visitedCells = new Point[numberOfCells];
+            int _index = 0;
+            for (int i = 0; i < arrayOfPaths.Length; i++)
+            {
+                for (int j = 0; j < arrayOfPaths[i].Length; j++)
+                {
+                    visitedCells[_index] = new Point(arrayOfPaths[i][j]);
+                    _index++;
+                }
+            }
+
+            List<Cell> closedList = new List<Cell>();
+
+            while (openList.Any() == true)
+            {
+                IEnumerable<Cell> query = openList.OrderBy(x => x.G);
+                Cell current = query.First();
+                openList.Remove(current);
+                closedList.Add(current);
+                Point[] neighbors = map.ReturnNeighbours(current.Point);
+                foreach (Point neighbor in neighbors)
+                {
+                    Cell newCell = null;
+                    if (visitedCells.Contains(neighbor))
+                    {
+                        newCell = new Cell(neighbor, current.G + POINTSRANGE + map.AreaOfMap, current);
+                    }
+                    else
+                    {
+                        newCell = new Cell(neighbor, current.G + POINTSRANGE, current);
+                    }
+                    if (newCell.Point.Equals(goal))
+                        return ReturnPath(newCell);
+                    if (closedList.Contains(newCell) == false)
+                    {
+
+                        if (openList.Contains(newCell) == true)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            openList.Add(newCell);
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+      
 
         /// <summary>
         /// Uses Cell's parents to get the full path.
@@ -551,102 +825,94 @@ namespace AlgorithmLibrary
             return doorP;
         }
 
-        /// <summary>
-        /// Check if the 'character' can die in the way with currentXP;
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns>If died returns point of death and point before it, else null.</returns>
-        private Point isDeadInTheWay(Point[] path)
-        {
-
-            //Objects that can be found in the way and used but recover if 'the character' died in the way.
-            Dictionary<Point, char> tempObjects = new Dictionary<Point, char>();
-
-            int tempCurrentHP = currentXP;
-
-            for (int i = 0; i < path.Count(); i++)
-            {
-                Point positionInTheWay = path[i];
-                char tempObject = map.ReturnObject(positionInTheWay);
-
-                if(tempObject == '.' || tempObject == 'S' || tempObject == 'Q')
-                {
-                    continue;
-                }
-
-                else if (Maps.KEYS.Contains(tempObject))
-                {
-                    Point doorP = DeleteDoorAndKey(positionInTheWay, tempObject);
-                    tempObjects.Add(positionInTheWay, tempObject);
-                    tempObjects.Add(doorP, map.ReturnObject(doorP));
-                }
-                else if (Maps.MEDKIT == tempObject)
-                {
-                    UseMedkit(positionInTheWay);
-                    tempObjects.Add(positionInTheWay, tempObject);
-                }
-                else if (Maps.FIRE_POWER.Contains(tempObject))
-                {
-
-                    bool IsDie = GetDamage((int)Char.GetNumericValue(tempObject));
-                    if (IsDie == true)
-                    {
-                        //Recover founded medkites, doors and cards.
-                        foreach (KeyValuePair<Point, char> _object in tempObjects)
-                        {
-                            map.ChangeObject(_object.Key, _object.Value);
-                        }
-
-                        currentXP = tempCurrentHP;
-                        Point pointBeforeDiePoint = path[i - 1];
-                        return pointBeforeDiePoint;
-                    }
-                }
-                else
-                {
-                    throw new ArgumentException("There is something unknown in the way!", $"{tempObject}");
-                }
-            }
-            return Point.nullPoint;
-        }
-
-        private Point[] FindWayToNearestMedkit(Point currentPosition, Point pointBeforeDiePoint)
+        private Point[] ReturnWayToFirstClosestMedkit(Point currentPosition, Point pointBeforeDiePoint)
         {
             Point[] medkitsPositions = map.ReturnElementsPositionsOnMap(Maps.MEDKIT);
             if(medkitsPositions == null)
             {
-                throw new ArgumentException("The character died in the way!");
+                throw new ArgumentException("There is no a medkit!");
             }
-            Dictionary<Point, int> closestMedkit = ReturnClosestObjects(pointBeforeDiePoint, medkitsPositions);
-            foreach(Point medkitPosition in closestMedkit.Keys)
+            Point[] closestMedkits = FindClosestObjects(pointBeforeDiePoint, medkitsPositions);
+
+            for (int i = 0; i < closestMedkits.Length; i++)
             {
-                Point[] pathToMedkit = FindPath(currentPosition, medkitPosition);
-                bool isThereDoor = IsThereDoor(pathToMedkit);
-                if(isThereDoor != true)
+                Point[] wayToMedkit = FindPath(currentPosition, closestMedkits[i]);
+                if(wayToMedkit != null)
                 {
-                    if (isDeadInTheWay(pathToMedkit).Equals(Point.nullPoint))
-                    {
-                        return pathToMedkit;
-                    }
+                    return wayToMedkit;
                 }
             }
 
-            throw new ArgumentException("The character died in the way!");
+            throw new ArgumentException("There are no ways to medkits!");
         }
-
-        private Dictionary<Point, int> ReturnClosestObjects(Point startPoint, Point[] listOfObjects)
+        /// <summary>
+        /// Order objects from start point by numberOfSteps.
+        /// </summary>
+        /// <param name="startPoint"></param>
+        /// <param name="listOfObjects"></param>
+        /// <returns>Returns a sorted dictionary of closest ways to the objects.</returns>
+        private Dictionary<Point[], int> ReturnClosestWaysToObjectsDictionary(Point startPoint, Point[] listOfObjects)
         {
-            Dictionary<Point, int> numberOfStepsToKeys = new Dictionary<Point, int>();
+            Dictionary<Point[], int> numberOfStepsToObjects = new Dictionary<Point[], int>();
             foreach (Point positionOfObject in listOfObjects)
             {
                 Point[] pathToTheObject = FindPath(startPoint, positionOfObject);
-                numberOfStepsToKeys.Add(positionOfObject, pathToTheObject.Length);
+                if(pathToTheObject != null)
+                {
+                    numberOfStepsToObjects.Add(pathToTheObject, pathToTheObject.Length);
+                }
             }
 
             //Sort the dictonary from smaller to higher.
-            var result = numberOfStepsToKeys.OrderBy(key => key.Value);
+            var result = numberOfStepsToObjects.OrderBy(key => key.Value);
 
             return result.ToDictionary(pair => pair.Key, pair => pair.Value);
+        }
+
+        /// <summary>
+        /// Order objects from start point by numberOfSteps.
+        /// </summary>
+        /// <param name="startPoint"></param>
+        /// <param name="listOfObjects"></param>
+        /// <returns>Returns a sorted array of closest ways to the objects.</returns>
+        private Point[][] ReturnClosestWaysToObjects(Point startPoint, Point[] listOfObjects)
+        {
+            Dictionary<Point[], int> numberOfStepsToObjects = new Dictionary<Point[], int>();
+            foreach (Point positionOfObject in listOfObjects)
+            {
+                Point[] pathToTheObject = FindPath(startPoint, positionOfObject);
+                if (pathToTheObject != null)
+                {
+                    numberOfStepsToObjects.Add(pathToTheObject, pathToTheObject.Length);
+                }
+            }
+
+            //Sort the dictonary from smaller to higher.
+            var result = numberOfStepsToObjects.OrderBy(key => key.Value);
+
+            Dictionary<Point[], int> resultDictionary = result.ToDictionary(pair => pair.Key, pair => pair.Value);
+
+            return resultDictionary.Keys.ToArray();
+        }
+
+        private Point[] FindClosestObjects(Point startPoint, Point[] listOfObjects)
+        {
+            Dictionary<Point, int> numberOfStepsToObjects = new Dictionary<Point, int>();
+            foreach (Point positionOfObject in listOfObjects)
+            {
+                Point[] pathToTheObject = FindPath(startPoint, positionOfObject);
+                if (pathToTheObject != null)
+                {
+                    numberOfStepsToObjects.Add(positionOfObject, pathToTheObject.Length);
+                }
+            }
+
+            //Sort the dictonary from smaller to higher.
+            var result = numberOfStepsToObjects.OrderBy(key => key.Value);
+
+            Dictionary<Point, int> resultDictionary = result.ToDictionary(pair => pair.Key, pair => pair.Value);
+
+            return resultDictionary.Keys.ToArray();
         }
     }
 }

@@ -6,6 +6,8 @@ namespace AlgorithmLibrary
     {
 
         public static readonly Point nullPoint = new Point(-1, -1);
+        public int X { get; }
+        public int Y { get; }
         public enum Key : byte
         {
             X,
@@ -37,9 +39,6 @@ namespace AlgorithmLibrary
             Y = point.Y;
         }
 
-        public int X { get;}
-
-        public int Y { get;}
 
         public bool Equals(Point other)
         {

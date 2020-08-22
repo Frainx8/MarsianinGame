@@ -15,21 +15,31 @@ namespace AlgorithmLibrary
         public static readonly char[] KEYS = { 'a', 'b', 'c', 'e', 'd' };
         public static readonly char[] FIRE_POWER = { '1', '2', '3', '4', '5' };
         public const char MEDKIT = 'H';
-        
+        public Point Q { get; private set; }
+        public Point S { get; private set; }
+        public char[,] Map { get; private set; }
+
         public Maps(string nameOfMap)
         {
             Map = ReadTxt(nameOfMap);
-            if (IsThereElementOnMap('Q') == false)
+            Q = ReturnAnElementPositionOnMap('Q');
+            S = ReturnAnElementPositionOnMap('S');
+            if (Q.Equals(Point.nullPoint))
             {
                 throw new System.ArgumentException("There is no exit!", "Map");
             }
-            if (IsThereElementOnMap('S') == false)
+            if (S.Equals(Point.nullPoint))
             {
                 throw new System.ArgumentException("There is no enter!", "Map");
             }
         }
-
-        public char[,] Map { get; private set; }
+        public int AreaOfMap
+        {
+            get
+            {
+                return Map.GetLength(0) * Map.GetLength(1);
+            }
+        }
 
         /// <summary>
         /// Returns contained object in the point.
@@ -209,25 +219,25 @@ namespace AlgorithmLibrary
             if (point.X != 0)
             {
                 Point leftPoint = new Point(point, -1, Point.Key.X);
-                if(ReturnObject(leftPoint) != 'X')
+                if(ReturnObject(leftPoint) != 'X' || ReturnObject(leftPoint) != '5')
                     neigbours.Add(leftPoint);
             }
             if (point.X != Map.GetLength(1) - 1)
             {
                 Point rightPoint = new Point(point, 1, Point.Key.X);
-                if (ReturnObject(rightPoint) != 'X')
+                if (ReturnObject(rightPoint) != 'X' || ReturnObject(rightPoint) != '5')
                     neigbours.Add(rightPoint);
             }
             if (point.Y != 0)
             {
                 Point upperPoint = new Point(point, -1, Point.Key.Y);
-                if (ReturnObject(upperPoint) != 'X')
+                if (ReturnObject(upperPoint) != 'X' || ReturnObject(upperPoint) != '5')
                     neigbours.Add(upperPoint);
             }
             if (point.Y != Map.GetLength(0) - 1)
             {
                 Point belowPoint = new Point(point, 1, Point.Key.Y);
-                if (ReturnObject(belowPoint) != 'X')
+                if (ReturnObject(belowPoint) != 'X' || ReturnObject(belowPoint) != '5')
                     neigbours.Add(belowPoint);
             }
             return neigbours.ToArray();
