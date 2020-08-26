@@ -77,40 +77,51 @@ namespace AlgorithmLibrary
 
             #region First step
             //FIRST step - find the way to the Q through doors.
-            Point[] firstStep = FindPath(map.ReturnAnElementPositionOnMap('S'), map.ReturnAnElementPositionOnMap('Q'));
+            //Point[] firstStep = FindPath(map.ReturnAnElementPositionOnMap('S'), map.ReturnAnElementPositionOnMap('Q'));
 
-            if (firstStep == null)
-            {
-                throw new ArgumentException("There are no way to the Q!");
-            }
-            #endregion
-
-            #region Second step
-            //SECOND step - find all the doors that lead to the Q.
-
-            Dictionary<char, Point> allDoorsToGoal = FindDoorsInTheFirstStep(firstStep);
-            //if (allDoorsToGoal != null)
+            //if (firstStep == null)
             //{
-            //    return firstStep;
+            //    throw new ArgumentException("There are no way to the Q!");
             //}
-
             #endregion
 
-            #region Third step
-            //Third step - find the way to the Q through the doors.
-            bool IsFire = false;
-            Point[] result = FindWayToQThroughDoors(allDoorsToGoal, ref IsFire);
+            //#region Second step
+            ////SECOND step - find all the doors that lead to the Q.
 
-            if(!IsFire)
+            //Dictionary<char, Point> allDoorsToGoal = FindDoorsInTheFirstStep(firstStep);
+            //#region Third step
+            ////Third step - find the way to the Q through the doors.
+            //bool IsFire = false;
+            //Point[] result = FindWayToQThroughDoors(allDoorsToGoal, ref IsFire);
+
+            //#endregion
+
+            //Dictionary that keeps all objects from the map.
+            var allObjects = FindAllObjects(map.S);
+
+            //All combinations from allObjects of the map.
+            List<string[]> allCombinations = new List<string[]>();
+
+            for (int i = allObjects.Count(); i > 0; i--)
             {
-                return result;
+                var resultT = Combinations.FindCombinations(allObjects.Keys, i);
+                foreach (var comb in resultT.ToArray())
+                {
+                    allCombinations.Add(comb.ToArray());
+                }
             }
 
-            #endregion
+            Point[] resultOfAlgorithm = ReturnShortestPathFromCombinations(allCombinations, allObjects);
 
-            #region Another way
-            return null;
-            #endregion
+            if(resultOfAlgorithm != null)
+            {
+                return resultOfAlgorithm;
+            }
+            else
+            {
+                throw new ArgumentException("The character has died!");
+            }
+
         }
 
         /// <summary>
@@ -205,12 +216,8 @@ namespace AlgorithmLibrary
                     {
                         numberOfSteps.Remove(closestKey);
                     }
-                    else if(IsThereFire(pathToKey))
+                    else if (FireCheck(pathToKey))
                     {
-                        foreach(KeyValuePair<Point, char> door in deletedDoors)
-                        {
-                            map.ChangeObject(door.Key, door.Value);
-                        }
                         IsFire = true;
                         return null;
                     }
@@ -232,9 +239,29 @@ namespace AlgorithmLibrary
 
             Point[] pathToQ = FindPath(currentPosition, map.Q);
 
+            if (FireCheck(pathToQ))
+            {
+                IsFire = true;
+                return null;
+            }
+
             result.AddRange(pathToQ);
 
             return result.ToArray();
+
+            bool FireCheck(Point[] path)
+            {
+                if (IsThereFire(path))
+                {
+                    foreach (KeyValuePair<Point, char> door in deletedDoors)
+                    {
+                        map.ChangeObject(door.Key, door.Value);
+                    }
+                    return true;
+
+                }
+                return false;
+            }
         }
 
         /// <summary>
@@ -252,6 +279,32 @@ namespace AlgorithmLibrary
             }
             else
                 return false;
+        }
+
+        /// <summary>
+        /// Returns true if dead.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private bool TakeDamageFromPath(Point[] path)
+        {
+            foreach (Point position in path)
+            {
+                char tempObject = map.ReturnObject(position);
+                if (tempObject == '.')
+                    continue;
+                else if (Maps.FIRE_POWER.Contains(tempObject))
+                {
+                    int firePower = int.Parse(tempObject.ToString());
+                    bool isDead = GetDamage(firePower);
+                    if(isDead)
+                    {
+                        return true;
+                    }
+                    
+                }
+            }
+            return false;
         }
 
         private void UseMedkit(Point position)
@@ -291,7 +344,173 @@ namespace AlgorithmLibrary
             return IsThereObjectInWay(path, Maps.FIRE_POWER);
         }
 
+        private void RestoreObjects(Dictionary<Point, char> deletedObjects)
+        {
+            foreach (var item in deletedObjects)
+            {
+                map.ChangeObject(item.Key, item.Value);
+            }
+            deletedObjects.Clear();
+        }
+        private void RestoreObjects(Dictionary<string, Point> _objectsOfMap)
+        {
+            foreach (var item in _objectsOfMap)
+            {
+                char _object;
+                if(item.Key == "H1" || item.Key == "H2")
+                {
+                    _object = 'H';
+                }
+                else
+                {
+                    _object = item.Key[0];
+                }
+                    map.ChangeObject(item.Value, _object);
+            }
+        }
+
+        #region Combinations
+
+
+
+        #endregion
+
         #region Pathfinding algorithms
+        private Point[] ReturnShortestPathFromCombinations(IList<string[]> combinations, Dictionary<string, Point> _objectsOfMap)
+        {
+            int minNumberOfSteps = Int32.MaxValue;
+            Point[] shortestWay = null;
+            Dictionary<Point, char> deletedObjects = new Dictionary<Point, char>();
+
+            foreach (string[] combination in combinations)
+            {
+                List<string[]> permutationsOfCombination = new List<string[]>();
+                
+                //Load permutationsOfObjectsName
+                var resultT = Permutations.GetPermutations(combination, combination.Length);
+                foreach (var comb in resultT.ToArray())
+                {
+                    permutationsOfCombination.Add(comb.ToArray());
+                }
+
+                
+
+                foreach (string[] aPermutation in permutationsOfCombination)
+                {
+                    Point currentPosition = map.S;
+                    currentXP = MAX_XP;
+                    RestoreObjects(deletedObjects);
+                    //debug
+                    RestoreObjects(_objectsOfMap);
+                    //
+                    List<Point> wholePath = new List<Point>();
+
+                    bool breakFlag = false;
+                    foreach (string letter in aPermutation)
+                    {
+                        Point goal = _objectsOfMap[letter];
+                        Point[] tempPath = FindPath(currentPosition, goal);
+                        if (tempPath == null)
+                        {
+                            breakFlag = true;
+                            break;
+                        }
+                        else if(IsThereDoor(tempPath))
+                        {
+                            breakFlag = true;
+                            break;
+                        }
+                        else
+                        {
+                            
+                            if(!TakeDamageFromPath(tempPath))
+                            {
+                                currentPosition = goal;
+                                char tempObject = map.ReturnObject(goal);
+                                wholePath.AddRange(tempPath);
+                                wholePath.Remove(wholePath.Last());
+                                if(Maps.MEDKIT == tempObject)
+                                {
+                                    UseMedkit(goal);
+                                }
+                                else if(Maps.KEYS.Contains(tempObject))
+                                {
+                                    map.DeleteObject(goal);
+                                    char door = Char.ToUpper(tempObject);
+                                    Point doorPosition = map.ReturnAnElementPositionOnMap(door);
+                                    map.DeleteObject(doorPosition);
+                                    deletedObjects.Add(doorPosition, door);
+                                }
+                                deletedObjects.Add(goal, tempObject);
+                                //Console.Write(deletedObjects.Count() + " ");
+                                //StringBuilder stringBuilder = new StringBuilder();
+                                //foreach (char letter1 in deletedObjects.Values)
+                                //{
+                                //    stringBuilder.Append(letter1);
+                                //}
+                                //Console.WriteLine(stringBuilder.ToString());
+                            }
+                            else
+                            {
+                                breakFlag = true;
+                                break;
+                            }
+
+                        }
+                    }
+                    if(breakFlag)
+                    {
+                        continue;
+                    }
+                    else if(wholePath != null)
+                    {
+                        Point[] pathToQ = FindPath(currentPosition, map.Q);
+                        map.WritePointInConsole(currentPosition);
+                        if (pathToQ == null || IsThereDoor(pathToQ))
+                        {
+                            continue;
+                        }
+                        else
+                        {
+
+                            if (!TakeDamageFromPath(pathToQ))
+                            {
+                                wholePath.AddRange(pathToQ);
+
+                                if(wholePath.Count < minNumberOfSteps)
+                                {
+                                    
+                                    minNumberOfSteps = wholePath.Count;
+                                    shortestWay = wholePath.ToArray();
+
+
+                                    // DEBUG
+                                    StringBuilder stringBuilder = new StringBuilder();
+                                    foreach (string letter in aPermutation)
+                                    {
+                                        stringBuilder.Append(letter);
+                                    }
+                                    stringBuilder.Append($" {minNumberOfSteps}");
+                                    MyDebug.WriteStringInDebugTxt(stringBuilder.ToString(), true);
+                                    //
+                                }
+                            }
+                            else
+                            {
+                                continue;
+                            }
+
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+            }
+
+            return shortestWay;
+        }
 
         /// <summary>
         /// Uses A* algorithm to find the shortest way to the goal.
@@ -393,7 +612,7 @@ namespace AlgorithmLibrary
         /// </summary>
         /// <param name="start">Start point to start the search.</param>
         /// <returns>Returns dictionary of founded objects by char and point.</returns>
-        private Dictionary<char, Point> FindAllObjects(Point start)
+        private Dictionary<string, Point> FindAllObjects(Point start)
         {
             Cell source = new Cell(start, null);
             List<Cell> openList = new List<Cell>()
@@ -403,20 +622,27 @@ namespace AlgorithmLibrary
 
             List<Cell> closedList = new List<Cell>();
 
-            Dictionary<char, Point> result = new Dictionary<char, Point>();
+            Dictionary<string, Point> result = new Dictionary<string, Point>();
+
+            int numberOfMedkit = 1;
 
             while (openList.Any() == true)
             {
                 Cell current = openList.First();
 
                 char tempObject = map.ReturnObject(current.Point);
+                
                 if(tempObject != '.')
                 {
-                    if(Maps.DOORS.Contains(tempObject)
-                        || Maps.KEYS.Contains(tempObject)
-                        || Maps.MEDKIT == tempObject)
+                    if(Maps.KEYS.Contains(tempObject))
                     {
-                        result.Add(tempObject, current.Point);
+                        result.Add(tempObject.ToString(), current.Point);
+                    }
+                    if (Maps.MEDKIT == tempObject)
+                    {
+                        string medkitName = $"H{numberOfMedkit}";
+                        numberOfMedkit++;
+                        result.Add(medkitName, current.Point);
                     }
                 }
 

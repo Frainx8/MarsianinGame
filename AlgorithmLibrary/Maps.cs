@@ -33,13 +33,7 @@ namespace AlgorithmLibrary
                 throw new System.ArgumentException("There is no enter!", "Map");
             }
         }
-        public int AreaOfMap
-        {
-            get
-            {
-                return Map.GetLength(0) * Map.GetLength(1);
-            }
-        }
+
 
         /// <summary>
         /// Returns contained object in the point.

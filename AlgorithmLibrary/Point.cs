@@ -48,5 +48,9 @@ namespace AlgorithmLibrary
                 return false;
         }
 
+        public override string ToString()
+        {
+            return $"{X}, {Y}";
+        }
     }
 }

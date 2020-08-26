@@ -45,6 +45,16 @@ namespace AlgorithmLibrary
             }
         }
 
+        public static void WriteStringInDebugTxt(string _string, bool append = false)
+        {
+            string fileName = @"log\debug.txt";
+            using (StreamWriter sw = new StreamWriter(fileName, append))
+            {
+                sw.WriteLine(_string);
+            }
+        }
+
+
         public static void WriteStringInTheConsole(string _string)
         {
             System.Diagnostics.Trace.WriteLine(_string);
