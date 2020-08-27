@@ -61,10 +61,8 @@ namespace AlgorithmLibrary
             }
         }
 
-        public void WriteResultToFile()
+        public void WriteResultToFile(string fileName)
         {
-            string fileName = @"moves.txt";
-
             using (StreamWriter sw = new StreamWriter(fileName, false))
             {
                 sw.WriteLine(Directions.Length);
@@ -74,27 +72,21 @@ namespace AlgorithmLibrary
 
         private Point[] DoAlgorithm()
         {
-
             #region First step
-            //FIRST step - find the way to the Q through doors.
-            //Point[] firstStep = FindPath(map.ReturnAnElementPositionOnMap('S'), map.ReturnAnElementPositionOnMap('Q'));
 
-            //if (firstStep == null)
-            //{
-            //    throw new ArgumentException("There are no way to the Q!");
-            //}
+            Point[] firstStep = FindPath(map.S, map.Q);
+
+            if (firstStep == null)
+            {
+                throw new ArgumentException("There are no way to the Q!");
+            }
+            else if(!IsThereDoor(firstStep) && !IsThereFire(firstStep))
+            {
+                return firstStep;
+            }
             #endregion
 
-            //#region Second step
-            ////SECOND step - find all the doors that lead to the Q.
-
-            //Dictionary<char, Point> allDoorsToGoal = FindDoorsInTheFirstStep(firstStep);
-            //#region Third step
-            ////Third step - find the way to the Q through the doors.
-            //bool IsFire = false;
-            //Point[] result = FindWayToQThroughDoors(allDoorsToGoal, ref IsFire);
-
-            //#endregion
+            #region Second step            
 
             //Dictionary that keeps all objects from the map.
             var allObjects = FindAllObjects(map.S);
@@ -102,6 +94,7 @@ namespace AlgorithmLibrary
             //All combinations from allObjects of the map.
             List<string[]> allCombinations = new List<string[]>();
 
+            //Generating all combinations from founded objects.
             for (int i = allObjects.Count(); i > 0; i--)
             {
                 var resultT = Combinations.FindCombinations(allObjects.Keys, i);
@@ -122,146 +115,7 @@ namespace AlgorithmLibrary
                 throw new ArgumentException("The character has died!");
             }
 
-        }
-
-        /// <summary>
-        /// Check if there are doors in the way.
-        /// </summary>
-        /// <param name="way"></param>
-        /// <returns>Returns path, if there is no doors and fire. Otherwise null, but
-        /// keep founded doors in allDoorsInTheSecondStep.</returns>
-        Dictionary<char, Point> FindDoorsInTheFirstStep(Point[] way)
-        {
-            //Use it for all needed doors to get to Q. Bool to check if already check the way to the door.
-            Dictionary<Point, bool> allDoorsInTheSecondStep = new Dictionary<Point, bool>();
-
-            //Fill the dictionary by the path from the first step.
-            foreach (Point doorPosition in ReturnDoorsInThePath(way))
-            {
-                allDoorsInTheSecondStep.Add(doorPosition, false);
-            }
-
-            //Check if there is at least one door in the way to Q.
-            if (allDoorsInTheSecondStep.Any() == true)
-            {
-                //looking for doors that lead to the 'main' doors from the first path
-                while (!AreAllDoorsVisited(allDoorsInTheSecondStep))
-                {
-                    Point notVisitedDoor = ReturnNotVisitedDoor(allDoorsInTheSecondStep);
-                    if (notVisitedDoor.Equals(Point.nullPoint))
-                    {
-                        throw new System.ArgumentException("It is not a visited door!", "notVisitedDoor");
-                    }
-
-                    char doorKey = Char.ToLower(map.ReturnObject(notVisitedDoor));
-
-                    //Find a way to the key.
-                    Point[] tempPathToTheKey = FindPath(notVisitedDoor, map.ReturnAnElementPositionOnMap(doorKey));
-
-                    if (tempPathToTheKey == null)
-                    {
-                        throw new ArgumentException("There are no way to the Q!");
-                    }
-
-                    //Check if there is any door in the key way.
-
-                    foreach (Point tempDoor in ReturnDoorsInThePath(tempPathToTheKey))
-                    {
-                        //Add another door in the dictionary if it in the way to the card and if it is not already in the dictionary.
-                        if (!allDoorsInTheSecondStep.ContainsKey(tempDoor))
-                        {
-                            allDoorsInTheSecondStep.Add(tempDoor, false);
-                        }
-                    }
-
-                    //This door have became visited.
-                    allDoorsInTheSecondStep[notVisitedDoor] = true;
-                }
-            }
-            Dictionary<char, Point> result = new Dictionary<char, Point>();
-            foreach(Point door in allDoorsInTheSecondStep.Keys)
-            {
-                char doorChar = map.ReturnObject(door);
-                result.Add(doorChar, door);
-            }
-
-            return result;
-        }
-
-        Point[] FindWayToQThroughDoors(Dictionary<char, Point> doors, ref bool IsFire)
-        {
-            Point currentPosition = map.S;
-            List<Point> result = new List<Point>();
-            
-            Dictionary<Point, char> deletedDoors = new Dictionary<Point, char>();
-            
-            while(doors.Any())
-            {
-                Dictionary<Point, int> numberOfSteps = new Dictionary<Point, int>();
-                foreach (char door in doors.Keys)
-                {
-                    Point doorKey = map.ReturnAnElementPositionOnMap(Char.ToLower(door));
-                    Point[] tempPath = FindPath(currentPosition, doorKey);
-                    int steps = tempPath.Count();
-                    numberOfSteps.Add(doorKey, steps);
-                }
-
-                while (numberOfSteps.Any())
-                {
-                    Point closestKey = numberOfSteps.OrderBy(key => key.Value).First().Key;
-
-                    Point[] pathToKey = FindPath(currentPosition, closestKey);
-
-                    if (IsThereDoor(pathToKey))
-                    {
-                        numberOfSteps.Remove(closestKey);
-                    }
-                    else if (FireCheck(pathToKey))
-                    {
-                        IsFire = true;
-                        return null;
-                    }
-                    else
-                    {
-                        result.AddRange(pathToKey);
-
-                        result.Remove(result.Last());
-                        currentPosition = closestKey;
-                        char doorChar = Char.ToUpper(map.ReturnObject(closestKey));
-                        Point door = map.ReturnAnElementPositionOnMap(doorChar);
-                        doors.Remove(doorChar);
-                        map.DeleteObject(door);
-                        deletedDoors.Add(door, doorChar);
-                        break;
-                    }
-                }
-            }
-
-            Point[] pathToQ = FindPath(currentPosition, map.Q);
-
-            if (FireCheck(pathToQ))
-            {
-                IsFire = true;
-                return null;
-            }
-
-            result.AddRange(pathToQ);
-
-            return result.ToArray();
-
-            bool FireCheck(Point[] path)
-            {
-                if (IsThereFire(path))
-                {
-                    foreach (KeyValuePair<Point, char> door in deletedDoors)
-                    {
-                        map.ChangeObject(door.Key, door.Value);
-                    }
-                    return true;
-
-                }
-                return false;
-            }
+            #endregion
         }
 
         /// <summary>
@@ -296,8 +150,7 @@ namespace AlgorithmLibrary
                 else if (Maps.FIRE_POWER.Contains(tempObject))
                 {
                     int firePower = int.Parse(tempObject.ToString());
-                    bool isDead = GetDamage(firePower);
-                    if(isDead)
+                    if(GetDamage(firePower))
                     {
                         return true;
                     }
@@ -317,16 +170,16 @@ namespace AlgorithmLibrary
         /// Check, if there is at least one object in the path
         /// </summary>
         /// <param name="path"></param>
-        /// <param name="_objects"></param>
+        /// <param name="_objectsToCompare"></param>
         /// <returns>Returns true if found, else false.</returns>
-        private bool IsThereObjectInWay(Point[] path, char[] _objects)
+        private bool IsThereObjectInWay(Point[] path, char[] _objectsToCompare)
         {
             foreach (Point position in path)
             {
                 char tempObject = map.ReturnObject(position);
                 if (tempObject == '.')
                     continue;
-                else if (_objects.Contains(tempObject))
+                else if (_objectsToCompare.Contains(tempObject))
                 {
                     return true;
                 }
@@ -344,6 +197,16 @@ namespace AlgorithmLibrary
             return IsThereObjectInWay(path, Maps.FIRE_POWER);
         }
 
+        /// <summary>
+        /// Check, if there is at least one door in the way.
+        /// </summary>
+        /// <param name="path">Way to check.</param>
+        /// <returns>True if found a door, else false.</returns>
+        private bool IsThereDoor(Point[] path)
+        {
+            return IsThereObjectInWay(path, Maps.DOORS);
+        }
+
         private void RestoreObjects(Dictionary<Point, char> deletedObjects)
         {
             foreach (var item in deletedObjects)
@@ -352,28 +215,7 @@ namespace AlgorithmLibrary
             }
             deletedObjects.Clear();
         }
-        private void RestoreObjects(Dictionary<string, Point> _objectsOfMap)
-        {
-            foreach (var item in _objectsOfMap)
-            {
-                char _object;
-                if(item.Key == "H1" || item.Key == "H2")
-                {
-                    _object = 'H';
-                }
-                else
-                {
-                    _object = item.Key[0];
-                }
-                    map.ChangeObject(item.Value, _object);
-            }
-        }
 
-        #region Combinations
-
-
-
-        #endregion
 
         #region Pathfinding algorithms
         private Point[] ReturnShortestPathFromCombinations(IList<string[]> combinations, Dictionary<string, Point> _objectsOfMap)
@@ -393,16 +235,11 @@ namespace AlgorithmLibrary
                     permutationsOfCombination.Add(comb.ToArray());
                 }
 
-                
-
                 foreach (string[] aPermutation in permutationsOfCombination)
                 {
                     Point currentPosition = map.S;
                     currentXP = MAX_XP;
                     RestoreObjects(deletedObjects);
-                    //debug
-                    RestoreObjects(_objectsOfMap);
-                    //
                     List<Point> wholePath = new List<Point>();
 
                     bool breakFlag = false;
@@ -442,13 +279,6 @@ namespace AlgorithmLibrary
                                     deletedObjects.Add(doorPosition, door);
                                 }
                                 deletedObjects.Add(goal, tempObject);
-                                //Console.Write(deletedObjects.Count() + " ");
-                                //StringBuilder stringBuilder = new StringBuilder();
-                                //foreach (char letter1 in deletedObjects.Values)
-                                //{
-                                //    stringBuilder.Append(letter1);
-                                //}
-                                //Console.WriteLine(stringBuilder.ToString());
                             }
                             else
                             {
@@ -482,17 +312,6 @@ namespace AlgorithmLibrary
                                     
                                     minNumberOfSteps = wholePath.Count;
                                     shortestWay = wholePath.ToArray();
-
-
-                                    // DEBUG
-                                    StringBuilder stringBuilder = new StringBuilder();
-                                    foreach (string letter in aPermutation)
-                                    {
-                                        stringBuilder.Append(letter);
-                                    }
-                                    stringBuilder.Append($" {minNumberOfSteps}");
-                                    MyDebug.WriteStringInDebugTxt(stringBuilder.ToString(), true);
-                                    //
                                 }
                             }
                             else
@@ -709,78 +528,6 @@ namespace AlgorithmLibrary
         private int ReturnH(Point current, Point goal)
         {
             return Math.Abs(current.X - goal.X) + Math.Abs(current.Y - goal.Y);
-        }
-
-        #endregion
-
-        #region Functions for doors
-
-        /// <summary>
-        /// Check, if there is at least one door in the way.
-        /// </summary>
-        /// <param name="path">Way to check.</param>
-        /// <returns>True if found a door, else false.</returns>
-        private bool IsThereDoor(Point[] path)
-        {
-            return IsThereObjectInWay(path, Maps.DOORS);
-        }
-
-        /// <summary>
-        /// Returns an unvisited door.
-        /// </summary>
-        /// <param name="allDoorsDictionary">Dictionary to check.</param>
-        /// <returns>Return position of the door. Else return Point -1, -1.</returns>
-        private Point ReturnNotVisitedDoor(Dictionary<Point, bool> allDoorsDictionary)
-        {
-            foreach (KeyValuePair<Point, bool> door in allDoorsDictionary)
-            {
-                if (door.Value == false)
-                {
-                    return door.Key;
-                }
-            }
-            return Point.nullPoint;
-        }
-
-        /// <summary>
-        /// Check if all the doors in the dictionary are visited.
-        /// </summary>
-        /// <param name="doors">A dictionary of doors by their position.</param>
-        /// <returns>True if all are visited, otherwise false</returns>
-        private bool AreAllDoorsVisited(Dictionary<Point, bool> doors)
-        {
-            foreach (bool check in doors.Values)
-            {
-                if (check == false)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// Finds all doors in the path.
-        /// </summary>
-        /// <param name="thePath">Array of Points - A path for searching the doors.</param>
-        /// <returns>An array of position of the founded doors.</returns>
-        private Point[] ReturnDoorsInThePath(Point[] path)
-        {
-            List<Point> result = new List<Point>();
-            foreach (Point position in path)
-            {
-                char tempObject = map.ReturnObject(position);
-                if (tempObject == '.')
-                    continue;
-                else if (Maps.DOORS.Contains(tempObject))
-                {
-                    if (result.Contains(position) != true)
-                    {
-                        result.Add(position);
-                    }
-                }
-            }
-            return result.ToArray();
         }
 
         #endregion

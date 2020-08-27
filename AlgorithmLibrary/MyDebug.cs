@@ -8,24 +8,24 @@ namespace AlgorithmLibrary
 {
     public class MyDebug
     {
-        public static void WriteExceptionInFile(Exception ex)
+        public static void WriteExceptionInFile(Exception ex, string logFolder, string folderName = "log")
         {
-            string fileName = @"log\error0.txt";
+            string fileName = $@"{logFolder}error0.txt";
             int index = 0;
 
-            var directory = new DirectoryInfo("log");
+            var directory = new DirectoryInfo(folderName);
             if (directory.Exists == false)
             {
-                Directory.CreateDirectory("log");
+                Directory.CreateDirectory(folderName);
 
             }
             if (File.Exists(fileName))
             {
                 fileName = directory.GetFiles().OrderByDescending(f => f.FullName).First().ToString();
-                List<string> files = new List<string>(Directory.GetFiles("log"));
+                List<string> files = new List<string>(Directory.GetFiles(folderName));
                 for (int i = files.Count - 1; i >= 0; i--)
                 {
-                    if (files[i].Contains("error") != true)
+                    if (!files[i].Contains("error"))
                     {
                         files.RemoveAt(i);
                     }
@@ -35,7 +35,7 @@ namespace AlgorithmLibrary
                 fileName = Path.GetFileName(files.Last());
                 fileName = fileName.Substring(0, fileName.IndexOf('.'));
                 index = Int32.Parse(fileName.Substring(5)) + 1;
-                fileName = $@"log\error{index}.txt";
+                fileName = $@"{folderName}\error{index}.txt";
             }
             using (StreamWriter sw = new StreamWriter(fileName))
             {
@@ -45,9 +45,9 @@ namespace AlgorithmLibrary
             }
         }
 
-        public static void WriteStringInDebugTxt(string _string, bool append = false)
+        public static void WriteStringInDebugTxt(string _string, bool append = false, string folderName = "log")
         {
-            string fileName = @"log\debug.txt";
+            string fileName = $@"{folderName}\debug.txt";
             using (StreamWriter sw = new StreamWriter(fileName, append))
             {
                 sw.WriteLine(_string);

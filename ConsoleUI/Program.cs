@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using AlgorithmLibrary;
@@ -9,9 +7,12 @@ namespace ConsoleUI
 {
     class Program
     {
-
-        private static string mapName = @"..\..\maps\map.txt";
+        private static string mapsFolder = @"..\..\maps\";
+        private static string logFolder = @"..\..\log\";
+        private static string mapName = $@"{mapsFolder}map.txt";
+        private static string movesName = @"..\..\moves.txt";
         private const int SLEEP_TIME = 300;
+        private const int TIMER = 5000;
         private static Maps AlgorithmMap;
         private static Maps myMap;
         private static Algorithm algorithm;
@@ -26,9 +27,16 @@ namespace ConsoleUI
             {
                 LoadGame(args);
 
-                algorithm.WriteResultToFile();
+                algorithm.WriteResultToFile(movesName);
 
-                ShowAlgorithmResult();
+                bool isWant;
+
+                isWant = CheckIfWantSeeTheResutl();
+
+                if(isWant)
+                {
+                    ShowAlgorithmResult();
+                }
 
                 Console.WriteLine();
 
@@ -44,7 +52,7 @@ namespace ConsoleUI
             catch (ArgumentException e)
             {
                 Console.WriteLine(e.Message);
-                MyDebug.WriteExceptionInFile(e);
+                MyDebug.WriteExceptionInFile(e, logFolder);
                 Console.WriteLine("The error is in the log folder.");
                 Console.WriteLine("Fix the problem and try again.");
             }
@@ -54,17 +62,36 @@ namespace ConsoleUI
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.StackTrace);
                 Console.WriteLine("The error is in the log folder.");
-                MyDebug.WriteExceptionInFile(ex);
+                MyDebug.WriteExceptionInFile(ex, logFolder);
             }
             if (!System.Diagnostics.Debugger.IsAttached)
                 Console.ReadKey();
+        }
+
+        private static bool CheckIfWantSeeTheResutl()
+        {
+            Console.WriteLine("Do you want to see the result? Y, enter - yes, N - no.");
+
+            while (true)
+            {
+                var input = Console.ReadKey();
+                if (input.Key == ConsoleKey.Y || input.Key == ConsoleKey.Enter)
+                {
+                    return true;
+                }
+                else if (input.Key == ConsoleKey.N)
+                {
+                    return false;
+                }
+            }
+            
         }
 
         private static void LoadGame(string[] args)
         {
             if (args.Length == 1)
             {
-                mapName = @$"..\..\maps\{args[0]}";
+                mapName = @$"{mapsFolder}{args[0]}";
             }
             AlgorithmMap = new Maps(mapName);
             myMap = new Maps(mapName);
@@ -121,7 +148,8 @@ namespace ConsoleUI
             }
             else if (Maps.FIRE_POWER.Contains(tempObject))
             {
-                GetDamage((int)Char.GetNumericValue(tempObject));
+                int firePower = (int)Char.GetNumericValue(tempObject);
+                GetDamage(firePower);
             }
             
         }
