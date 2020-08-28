@@ -7,8 +7,10 @@ namespace ConsoleUI
 {
     class Program
     {
+        private static string projectName = "MarsianinGame";
+        private static string logFolderFullPath;
         private static string mapsFolder = @"..\maps\";
-        private static string logFolder = @"..\log\";
+        private static string logFolderName = "log";
         private static string mapName = $@"{mapsFolder}map.txt";
         private static string movesName = @"..\moves.txt";
         private const int SLEEP_TIME = 300;
@@ -52,8 +54,8 @@ namespace ConsoleUI
             catch (ArgumentException e)
             {
                 Console.WriteLine(e.Message);
-                MyDebug.WriteExceptionInFile(e, logFolder);
-                Console.WriteLine("The error is in the log folder.");
+                MyDebug.WriteExceptionInFile(e, projectName, logFolderName);
+                Console.WriteLine($"The error is in the {logFolderFullPath}.");
                 Console.WriteLine("Fix the problem and try again.");
             }
             catch(Exception ex)
@@ -61,11 +63,10 @@ namespace ConsoleUI
                 Console.WriteLine("Ooops! Something went wrong!");
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.StackTrace);
-                Console.WriteLine("The error is in the log folder.");
-                MyDebug.WriteExceptionInFile(ex, logFolder);
+                Console.WriteLine($"The error is in the {logFolderFullPath}.");
+                MyDebug.WriteExceptionInFile(ex, projectName, logFolderName);
             }
-            if (!System.Diagnostics.Debugger.IsAttached)
-                Console.ReadKey();
+            Console.ReadKey();
         }
 
         private static bool CheckIfWantSeeTheResutl()
@@ -89,6 +90,7 @@ namespace ConsoleUI
 
         private static void LoadGame(string[] args)
         {
+            logFolderFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\{projectName}\\{logFolderName}";
             if (args.Length == 1)
             {
                 mapName = @$"{mapsFolder}{args[0]}";

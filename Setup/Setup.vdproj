@@ -21,7 +21,19 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_99D76DC64D30425B90ACABEEE8896113"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_C59C16E338B547569D38A45FCFE71B54"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_F838B3FEAE8D46CDA15FDFB2350F1FB2"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -116,6 +128,46 @@
         }
         "File"
         {
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_99D76DC64D30425B90ACABEEE8896113"
+            {
+            "SourcePath" = "8:..\\marsianinGame.ico"
+            "TargetName" = "8:marsianinGame.ico"
+            "Tag" = "8:"
+            "Folder" = "8:_358614195002404AA87A06D7FA6EF812"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F838B3FEAE8D46CDA15FDFB2350F1FB2"
+            {
+            "SourcePath" = "8:..\\WindowsFormsUI\\bin\\Debug\\console\\maps\\map.txt"
+            "TargetName" = "8:map.txt"
+            "Tag" = "8:"
+            "Folder" = "8:_3BF29B17854949B2B85D941FF5510AD8"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
         }
         "FileType"
         {
@@ -135,7 +187,7 @@
                     "{9EF0B969-E518-4E46-987F-47570745A589}:_3BF29B17854949B2B85D941FF5510AD8"
                     {
                     "Name" = "8:maps"
-                    "AlwaysCreate" = "11:FALSE"
+                    "AlwaysCreate" = "11:TRUE"
                     "Condition" = "8:"
                     "Transitive" = "11:FALSE"
                     "Property" = "8:_85AE95C1237D473CBD97B676AB750C3E"
@@ -193,9 +245,9 @@
         "Product"
         {
         "Name" = "8:Microsoft Visual Studio"
-        "ProductName" = "8:Marsianin game"
+        "ProductName" = "8:MarsianinGame"
         "ProductCode" = "8:{65CB49FC-3396-47F9-BA72-7CF795AC9324}"
-        "PackageCode" = "8:{C24656C9-F825-470E-98FD-1BB8BD4B38FA}"
+        "PackageCode" = "8:{4BE5F8ED-DC58-4FDE-92E3-189CC4CE4F7F}"
         "UpgradeCode" = "8:{7DCFA1C2-D6F9-4A1F-A730-DD795D260488}"
         "AspNetVersion" = "8:2.0.50727.0"
         "RestartWWWService" = "11:FALSE"
@@ -212,7 +264,7 @@
         "Keywords" = "8:"
         "ARPCOMMENTS" = "8:Algorithm for Volga IT"
         "ARPURLINFOABOUT" = "8:"
-        "ARPPRODUCTICON" = "8:"
+        "ARPPRODUCTICON" = "8:_99D76DC64D30425B90ACABEEE8896113"
         "ARPIconIndex" = "3:0"
         "SearchPath" = "8:"
         "UseSystemSearchPath" = "11:TRUE"
@@ -315,6 +367,20 @@
         }
         "Shortcut"
         {
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_254909399F1A4BEB88A65601AACDF82F"
+            {
+            "Name" = "8:MarsianinGame"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_C59C16E338B547569D38A45FCFE71B54"
+            "Folder" = "8:_E16388D8547448F092424A16E5EAA015"
+            "WorkingFolder" = "8:_358614195002404AA87A06D7FA6EF812"
+            "Icon" = "8:_99D76DC64D30425B90ACABEEE8896113"
+            "Feature" = "8:"
+            }
         }
         "UserInterface"
         {
