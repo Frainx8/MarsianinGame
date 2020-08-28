@@ -14,7 +14,6 @@ namespace ConsoleUI
         private static string mapName = $@"{mapsFolder}map.txt";
         private static string movesName = @"..\moves.txt";
         private const int SLEEP_TIME = 300;
-        private const int TIMER = 5000;
         private static Maps AlgorithmMap;
         private static Maps myMap;
         private static Algorithm algorithm;
@@ -43,7 +42,15 @@ namespace ConsoleUI
                 Console.WriteLine();
 
                 Console.WriteLine("The program is done!");
-                Console.WriteLine("The results are written to moves.txt.");
+                if(CheckForMovesTxt())
+                {
+                    Console.WriteLine($"The results are written to {movesName}");
+                }
+                else
+                {
+                    Console.WriteLine($"WARNING! File moves.txt wasn't created!");
+                    Console.WriteLine($"Run the program as an administrator!");
+                }
             }
             catch (ArgumentException e) when (e.Message == "The character died in the way!" ||
             e.Message == "There are no way to the Q!" || e.Message.Contains("There is something unknown"))
@@ -56,7 +63,6 @@ namespace ConsoleUI
                 Console.WriteLine(e.Message);
                 MyDebug.WriteExceptionInFile(e, projectName, logFolderName);
                 Console.WriteLine($"The error is in the {logFolderFullPath}.");
-                Console.WriteLine("Fix the problem and try again.");
             }
             catch(Exception ex)
             {
@@ -90,7 +96,8 @@ namespace ConsoleUI
 
         private static void LoadGame(string[] args)
         {
-            logFolderFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\{projectName}\\{logFolderName}";
+            logFolderFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}" +
+                $"\\{projectName}\\{logFolderName}";
             if (args.Length == 1)
             {
                 mapName = @$"{mapsFolder}{args[0]}";
@@ -166,6 +173,20 @@ namespace ConsoleUI
         {
             currentXP = MAX_XP;
             myMap.DeleteObject(position);
+        }
+
+        /// <summary>
+        /// Returns true if moves.txt exist.
+        /// </summary>
+        /// <returns></returns>
+        private static bool CheckForMovesTxt()
+        {
+            if (System.IO.File.Exists(movesName))
+            {
+                return true;
+            }
+            else
+                return false;
         }
     }
 }

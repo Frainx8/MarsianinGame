@@ -15,13 +15,17 @@ namespace WindowsFormsUI
         ///  The main entry point for the application.
         /// </summary>
         /// 
-        static string consoleExePath = @"console\solution.exe";
+        static string consoleFolder = "Ñonsole";
+        static string consoleExePath = $@"{consoleFolder}\solution.exe";
         private static string mapName = @"maps\map.txt";
         
         [STAThread]
         static void Main(string[] args)
         {
-            
+            if(!CheckForFolder(consoleFolder))
+            {
+                Directory.CreateDirectory(consoleFolder);
+            }
             if (args.Length == 2)
             {
                 int index = Array.IndexOf(args, "-console");
@@ -58,10 +62,20 @@ namespace WindowsFormsUI
                 Application.SetHighDpiMode(HighDpiMode.SystemAware);
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                //Application.Run(new MainForm(mapName));
-                Application.Run(new GameForm(mapName));
+                Application.Run(new MainForm(mapName));
             }
             
+        }
+
+        private static bool CheckForFolder(string folderName)
+        {
+            var directory = new DirectoryInfo(folderName);
+            if (directory.Exists)
+            {
+                return true;
+            }
+            else
+                return false;
         }
     }
 }

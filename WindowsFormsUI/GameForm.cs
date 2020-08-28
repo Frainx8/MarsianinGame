@@ -66,7 +66,6 @@ namespace WindowsFormsUI
             {
                 foreach (Control c in FlowLayoutPanels[tempPoint.Y].Controls)
                 {
-                    
                     if (c.Name == $"picture{tempPoint.X}")
                     {
                         PictureBox picture = (PictureBox)c;
@@ -199,6 +198,11 @@ namespace WindowsFormsUI
                 default:
                     return Properties.Resources.unknown;
             }
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
