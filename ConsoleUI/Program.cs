@@ -7,10 +7,10 @@ namespace ConsoleUI
 {
     class Program
     {
-        private static string mapsFolder = @"..\..\maps\";
-        private static string logFolder = @"..\..\log\";
+        private static string mapsFolder = @"..\maps\";
+        private static string logFolder = @"..\log\";
         private static string mapName = $@"{mapsFolder}map.txt";
-        private static string movesName = @"..\..\moves.txt";
+        private static string movesName = @"..\moves.txt";
         private const int SLEEP_TIME = 300;
         private const int TIMER = 5000;
         private static Maps AlgorithmMap;

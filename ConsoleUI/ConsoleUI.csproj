@@ -3,11 +3,17 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	  <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <AssemblyName>solution</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>C:\Users\acer\source\repos\MarsianinGame\WindowsFormsUI\bin\Debug\netcoreapp3.1\console\</OutputPath>
+    <OutputPath>C:\Users\acer\source\repos\MarsianinGame\WindowsFormsUI\bin\Debug\console\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>C:\Users\acer\source\repos\MarsianinGame\WindowsFormsUI\bin\Debug\console\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>

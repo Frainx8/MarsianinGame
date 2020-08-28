@@ -5,13 +5,15 @@ VisualStudioVersion = 16.0.29911.84
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleUI", "ConsoleUI\ConsoleUI.csproj", "{CD08FFEF-3370-45F2-B0B3-A857051C5D43}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsUI", "WindowsFormsUI\WindowsFormsUI.csproj", "{D478C40A-F77A-4BCF-B768-A1BE5D7393D8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WindowsFormsUI", "WindowsFormsUI\WindowsFormsUI.csproj", "{D478C40A-F77A-4BCF-B768-A1BE5D7393D8}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DE70BEDE-624F-4B76-851B-E07FB35AC580} = {DE70BEDE-624F-4B76-851B-E07FB35AC580}
 		{CD08FFEF-3370-45F2-B0B3-A857051C5D43} = {CD08FFEF-3370-45F2-B0B3-A857051C5D43}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlgorithmLibrary", "AlgorithmLibrary\AlgorithmLibrary.csproj", "{DE70BEDE-624F-4B76-851B-E07FB35AC580}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlgorithmLibrary", "AlgorithmLibrary\AlgorithmLibrary.csproj", "{DE70BEDE-624F-4B76-851B-E07FB35AC580}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj", "{ABB86CCD-938F-420A-9768-9C38B6E3644E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,11 +33,17 @@ Global
 		{DE70BEDE-624F-4B76-851B-E07FB35AC580}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE70BEDE-624F-4B76-851B-E07FB35AC580}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DE70BEDE-624F-4B76-851B-E07FB35AC580}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABB86CCD-938F-420A-9768-9C38B6E3644E}.Debug|Any CPU.ActiveCfg = Debug
+		{ABB86CCD-938F-420A-9768-9C38B6E3644E}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1B66DE6C-8AD8-4B9A-9C70-A60D9E1A8DE6}
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 EndGlobal
