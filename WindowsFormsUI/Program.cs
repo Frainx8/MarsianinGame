@@ -1,10 +1,9 @@
+using Microsoft.VisualBasic.FileIO;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using AlgorithmLibrary;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Windows.Forms;
 
 namespace WindowsFormsUI
@@ -15,40 +14,41 @@ namespace WindowsFormsUI
         ///  The main entry point for the application.
         /// </summary>
         /// 
-        static string consoleFolder = "Ñonsole";
+        static string consoleFolder = "Console";
         static string consoleExePath = $@"{consoleFolder}\solution.exe";
         private static string mapName = @"maps\map.txt";
         
         [STAThread]
         static void Main(string[] args)
         {
-            if(!CheckForFolder(consoleFolder))
-            {
-                Directory.CreateDirectory(consoleFolder);
-            }
             if (args.Length == 2)
             {
-                int index = Array.IndexOf(args, "-console");
-                if(index == -1)
+                string console = args[0].ToLower();
+                int mapIndex = 1;
+                if(console != "-console")
                 {
-                    index = Array.IndexOf(args, "-Console");
-                }
-                else if (index == -1)
-                {
-                    throw new Exception("There two arguments, but no one has -console!");
-                }
-                Trace.WriteLine(index);
-                if (index == 0)
-                {
-                    mapName = args[1];
+                    console = args[1].ToLower();
+                    mapIndex = 0;
+                    if (console != "-console")
+                    {
+                        throw new Exception("There two arguments, but no one has -console!");
+                    }
                 }
                 else
                 {
-                    mapName = args[0];
+                    if (mapIndex == 0)
+                    {
+                        mapName = args[1];
+                    }
+                    else
+                    {
+                        mapName = args[0];
+                    }
+                    Process.Start(consoleExePath, mapName);
                 }
-                Process.Start(consoleExePath, mapName);
+
             }
-            else if(args.Contains("-console"))
+            else if(args.Length == 1 && args[0].ToLower() == "-console")
             {
                 Process.Start(consoleExePath);
             }
@@ -58,18 +58,27 @@ namespace WindowsFormsUI
                 {
                     mapName = $"maps/{args[0]}";
                 }
-
                 Application.SetHighDpiMode(HighDpiMode.SystemAware);
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new MainForm(mapName));
+                if (!File.Exists(mapName))
+                {
+                    MessageBox.Show($"There is no {mapName}!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    Application.Run(new MainForm());
+                }
+                
+                else
+                {
+                    Application.Run(new MainForm(mapName));
+                }
             }
             
         }
 
         private static bool CheckForFolder(string folderName)
         {
-            var directory = new DirectoryInfo(folderName);
+            var directory = new DirectoryInfo($@".\{folderName}");
+            directory.Refresh();
             if (directory.Exists)
             {
                 return true;
@@ -77,5 +86,7 @@ namespace WindowsFormsUI
             else
                 return false;
         }
+
+        
     }
 }

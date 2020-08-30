@@ -9,9 +9,9 @@ namespace ConsoleUI
     {
         private static string projectName = "MarsianinGame";
         private static string logFolderFullPath;
-        private static string mapsFolder = @"..\maps\";
+        private static string mapsFolder = @"..\maps";
         private static string logFolderName = "log";
-        private static string mapName = $@"{mapsFolder}map.txt";
+        private static string mapName = $@"{mapsFolder}\map.txt";
         private static string movesName = @"..\moves.txt";
         private const int SLEEP_TIME = 300;
         private static Maps AlgorithmMap;
@@ -28,35 +28,47 @@ namespace ConsoleUI
             {
                 LoadGame(args);
 
-                algorithm.WriteResultToFile(movesName);
-
-                bool isWant;
-
-                isWant = CheckIfWantSeeTheResutl();
-
-                if(isWant)
+                if(algorithm.Result == null)
                 {
-                    ShowAlgorithmResult();
+                    ShowMap();
+                    if (algorithm.IsDead)
+                    {
+                        Console.WriteLine("The character died in the way!");
+                    }
+                    else
+                    {
+                        Console.WriteLine("There is no way to the exit!");
+                    }
+                }
+
+                else
+                {
+                    bool isWant;
+
+                    isWant = CheckIfWantSeeTheResutl();
+
+                    algorithm.WriteResultToFile(movesName);
+
+                    if (isWant)
+                    {
+                        ShowAlgorithmResult();
+                    }
+
+                    if (CheckForMovesTxt())
+                    {
+                        Console.WriteLine($"The results are written to {movesName}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"WARNING! File moves.txt wasn't created!");
+                        Console.WriteLine($"Run the program as an administrator!");
+                    }
                 }
 
                 Console.WriteLine();
 
                 Console.WriteLine("The program is done!");
-                if(CheckForMovesTxt())
-                {
-                    Console.WriteLine($"The results are written to {movesName}");
-                }
-                else
-                {
-                    Console.WriteLine($"WARNING! File moves.txt wasn't created!");
-                    Console.WriteLine($"Run the program as an administrator!");
-                }
-            }
-            catch (ArgumentException e) when (e.Message == "The character died in the way!" ||
-            e.Message == "There are no way to the Q!" || e.Message.Contains("There is something unknown"))
-            {
-                Console.WriteLine(e.Message);
-                Console.WriteLine("Change the map and try again!");
+                
             }
             catch (ArgumentException e)
             {
@@ -94,13 +106,31 @@ namespace ConsoleUI
             
         }
 
+        private static void ShowMap()
+        {
+            for (int y = 0; y < myMap.Map.GetLength(0); y++)
+            {
+                for (int x = 0; x < myMap.Map.GetLength(1); x++)
+                {
+                    Console.Write(myMap.Map[y, x]);
+                    Console.Write(" ");
+                }
+                Console.WriteLine();
+            }
+        }
+
         private static void LoadGame(string[] args)
         {
             logFolderFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}" +
                 $"\\{projectName}\\{logFolderName}";
             if (args.Length == 1)
             {
-                mapName = @$"{mapsFolder}{args[0]}";
+                if(args.Contains("maps"))
+                {
+                    mapName = args[0];
+                }
+                else
+                    mapName = @$"{mapsFolder}\{args[0]}";
             }
             AlgorithmMap = new Maps(mapName);
             myMap = new Maps(mapName);

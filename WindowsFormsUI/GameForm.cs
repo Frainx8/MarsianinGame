@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Text;
-using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using AlgorithmLibrary;
@@ -13,7 +9,14 @@ namespace WindowsFormsUI
 {
     public partial class GameForm : Form
     {
+        private MainForm mainForm;
+        private static string projectName = "MarsianinGame";
+        private static string mapsFolder = @"maps";
+        private static string logFolderName = "log";
+        private static string movesName = @"moves.txt";
         private const int SLEEP_TIME = 300;
+        private const int MAX_XP = 100;
+        private int currentHP = MAX_XP;
         private Maps AlgorithmMap;
         private Maps myMap;
         private Algorithm algorithm;
@@ -23,7 +26,9 @@ namespace WindowsFormsUI
         private const int SIZE_OF_IMAGE_X = 40;
         private const int SIZE_OF_IMAGE_Y = 40;
         private Bitmap doomBoy = Properties.Resources.doomBoyDown;
+        private Bitmap floor = Properties.Resources.floor;
         private event EventHandler<GameCompleteArgs> GameCompleteEvent;
+        private int numberOfSteps = -1;
         private class GameCompleteArgs : EventArgs
         {
             public string Result { get; set; }
@@ -36,25 +41,88 @@ namespace WindowsFormsUI
             InitializeComponent();
         }
 
-        public GameForm(string mapName)
+        public GameForm(MainForm mainForm, string mapName)
         {
             InitializeComponent();
+            this.mainForm = mainForm;
             this.mapName = mapName;
         }
 
-        private void GameForm_Load(object sender, EventArgs e)
+        private void GameForm_Load(object sender, EventArgs _event)
         {
-            LoadMap();
-
-            GameCompleteEvent += GameComplete;
-
-            ShowCharactersMovement();
+            try
+            {
+                LoadMap();
+            }
+            catch (ArgumentException ex)
+            {
+                MyDebug.WriteExceptionInFile(ex, projectName, logFolderName);
+                ShowMessageBox(ex.Message, "Error");
+            }
+            catch (Exception ex)
+            {
+                MyDebug.WriteExceptionInFile(ex, projectName, logFolderName);
+                ShowMessageBox(ex.Message, "Error");
+            }
         }
         private void GameComplete(object sender, GameCompleteArgs e)
         {
-            if(e.Result == "Complete")
+            if (!CheckForMovesTxt())
             {
-                MessageBox.Show("Level complete!", "Result", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("File moves.txt wasn't created! " +
+                    "Run the program as an administrator!", "WARNING!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            ShowMessageBox("Level complete!", "Result");
+        }
+
+        private static bool CheckForMovesTxt()
+        {
+            if (System.IO.File.Exists(movesName))
+            {
+                return true;
+            }
+            else
+                return false;
+        }
+
+        private bool CheckForResult()
+        {
+            
+            if (algorithm.Result == null)
+            {
+                if (algorithm.IsDead)
+                {
+                    ShowMessageBox("The character died in the way!", "Result");
+                }
+                else
+                {
+                    ShowMessageBox("There is no way to the exit!", "Result");
+                }
+                return false;
+            }
+            else
+                return true;
+        }
+
+        private void ShowMessageBox(string text, string caption)
+        {
+            if(caption != "Error")
+            {
+                MessageBox.Show(text, caption, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                MessageBox.Show(text, caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+            }
+            DialogResult dialogResult = MessageBox.Show("Do you want change map?", "Change map", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (dialogResult == DialogResult.Yes)
+            {
+                mainForm.ChangeToLoadingForm();
+            }
+            else
+            {
+                Application.Exit();
             }
         }
 
@@ -77,13 +145,34 @@ namespace WindowsFormsUI
 
                 pictureBoxes[tempPoint.Y, tempPoint.X] = tempPicture;
 
+                char tempObject = myMap.ReturnObject(point.X, point.Y);
+                if(tempObject != '.')
+                {
+                    if (Maps.DOORS.Contains(tempObject) ||
+                    Maps.KEYS.Contains(tempObject) ||
+                    Maps.MEDKIT == tempObject)
+                    {
+                        if (Maps.MEDKIT == tempObject)
+                        {
+                            UseMedkit();
+                        }
+                        PictureBox floorPicture = CreateNewPictureBox(floor, SIZE_OF_IMAGE_X, SIZE_OF_IMAGE_Y);
+                        pictureBoxes[point.Y, point.X] = floorPicture;
+                    }
+                    else if (Maps.FIRE_POWER.Contains(tempObject))
+                    {
+                        int firePower = (int)Char.GetNumericValue(tempObject);
+                        GetDamage(firePower);
+                    }
+                }
+
                 tempPicture = CreateNewPictureBox(pictureBoxes[point.Y, point.X]);
                 tempPoint = point;
 
-                PictureBox newPicture = CreateNewPictureBox(doomBoy, SIZE_OF_IMAGE_X, SIZE_OF_IMAGE_Y);
-                newPicture.Margin = new Padding(0);
+                PictureBox doomBoyPicture = CreateNewPictureBox(doomBoy, SIZE_OF_IMAGE_X, SIZE_OF_IMAGE_Y);
+                doomBoyPicture.Margin = new Padding(0);
 
-                pictureBoxes[point.Y, point.X] = newPicture;
+                pictureBoxes[point.Y, point.X] = doomBoyPicture;
 
                 foreach (Control c in FlowLayoutPanels[point.Y].Controls)
                 {
@@ -91,11 +180,15 @@ namespace WindowsFormsUI
                     {
                         PictureBox picture = (PictureBox)c;
 
-                        picture.Image = (Image)newPicture.Image.Clone();
+                        picture.Image = (Image)doomBoyPicture.Image.Clone();
                         c.Refresh();
                         break;
                     }
                 }
+
+                numberOfSteps++;
+                labelSteps.Text = numberOfSteps.ToString();
+                labelHP.Text = currentHP.ToString();
 
                 await Task.Delay(SLEEP_TIME);
                 
@@ -203,6 +296,29 @@ namespace WindowsFormsUI
         private void label2_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void GetDamage(int firePower)
+        {
+            int damage = 20;
+            currentHP -= damage * firePower;
+        }
+        private void UseMedkit()
+        {
+            currentHP = MAX_XP;
+        }
+
+        private void GameForm_Shown(object sender, EventArgs e)
+        {
+            if (CheckForResult())
+            {
+                algorithm.WriteResultToFile(movesName);
+
+                GameCompleteEvent += GameComplete;
+
+                ShowCharactersMovement();
+            }
+            
         }
     }
 }

@@ -11,6 +11,8 @@ namespace AlgorithmLibrary
         public Point[] Result { get; private set; }
         public string Directions { get; private set; }
 
+        public bool IsDead { get; private set; }
+
         private Maps map;
 
         private const int POINTSRANGE = 1;
@@ -24,7 +26,8 @@ namespace AlgorithmLibrary
 
             Result = DoAlgorithm();
 
-            Directions = WriteDirections(Result);
+            if(Result != null)
+                Directions = WriteDirections(Result);
         }
 
         private string WriteDirections(Point[] path)
@@ -78,7 +81,7 @@ namespace AlgorithmLibrary
 
             if (firstStep == null)
             {
-                throw new ArgumentException("There are no way to the Q!");
+                return null;
             }
             else if(!IsThereDoor(firstStep) && !IsThereFire(firstStep))
             {
@@ -112,7 +115,8 @@ namespace AlgorithmLibrary
             }
             else
             {
-                throw new ArgumentException("The character has died!");
+                IsDead = true;
+                return resultOfAlgorithm;
             }
 
             #endregion
