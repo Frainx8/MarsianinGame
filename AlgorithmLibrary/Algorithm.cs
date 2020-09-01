@@ -299,7 +299,6 @@ namespace AlgorithmLibrary
                     else if(wholePath != null)
                     {
                         Point[] pathToQ = FindPath(currentPosition, map.Q);
-                        map.WritePointInConsole(currentPosition);
                         if (pathToQ == null || IsThereDoor(pathToQ))
                         {
                             continue;

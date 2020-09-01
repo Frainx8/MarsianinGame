@@ -1,9 +1,6 @@
-using Microsoft.VisualBasic.FileIO;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using System.Windows.Forms;
 
 namespace WindowsFormsUI
@@ -16,11 +13,17 @@ namespace WindowsFormsUI
         /// 
         static string consoleFolder = "Console";
         static string consoleExePath = $@"{consoleFolder}\solution.exe";
-        private static string mapName = @"maps\map.txt";
+        static string mapsFolder = "maps";
+        private static string mapName = $@"{mapsFolder}\map.txt";
         
         [STAThread]
         static void Main(string[] args)
         {
+            if(args.Length > 2)
+            {
+                MessageBox.Show($"There are too much arguments!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             if (args.Length == 2)
             {
                 string console = args[0].ToLower();
@@ -31,21 +34,13 @@ namespace WindowsFormsUI
                     mapIndex = 0;
                     if (console != "-console")
                     {
-                        throw new Exception("There two arguments, but no one has -console!");
+                        MessageBox.Show($"There are two arguments, but no one has -console!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
                     }
                 }
-                else
-                {
-                    if (mapIndex == 0)
-                    {
-                        mapName = args[1];
-                    }
-                    else
-                    {
-                        mapName = args[0];
-                    }
-                    Process.Start(consoleExePath, mapName);
-                }
+                mapName = args[mapIndex];
+                //The current directory for console is the parent's process directory!
+                Process.Start(consoleExePath, mapName);
 
             }
             else if(args.Length == 1 && args[0].ToLower() == "-console")
@@ -56,7 +51,7 @@ namespace WindowsFormsUI
             {
                 if (args.Length == 1)
                 {
-                    mapName = $"maps/{args[0]}";
+                    mapName = $"{mapsFolder}\\{args[0]}";
                 }
                 Application.SetHighDpiMode(HighDpiMode.SystemAware);
                 Application.EnableVisualStyles();
@@ -73,20 +68,6 @@ namespace WindowsFormsUI
                 }
             }
             
-        }
-
-        private static bool CheckForFolder(string folderName)
-        {
-            var directory = new DirectoryInfo($@".\{folderName}");
-            directory.Refresh();
-            if (directory.Exists)
-            {
-                return true;
-            }
-            else
-                return false;
-        }
-
-        
+        }        
     }
 }

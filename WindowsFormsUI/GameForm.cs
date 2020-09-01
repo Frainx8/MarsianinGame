@@ -11,7 +11,6 @@ namespace WindowsFormsUI
     {
         private MainForm mainForm;
         private static string projectName = "MarsianinGame";
-        private static string mapsFolder = @"maps";
         private static string logFolderName = "log";
         private static string movesName = @"moves.txt";
         private const int SLEEP_TIME = 300;
@@ -27,15 +26,9 @@ namespace WindowsFormsUI
         private const int SIZE_OF_IMAGE_Y = 40;
         private Bitmap doomBoy = Properties.Resources.doomBoyDown;
         private Bitmap floor = Properties.Resources.floor;
-        private event EventHandler<GameCompleteArgs> GameCompleteEvent;
+        private event EventHandler GameCompleteEvent;
         private int numberOfSteps = -1;
-        private class GameCompleteArgs : EventArgs
-        {
-            public string Result { get; set; }
-        }
 
-        
-        
         public GameForm()
         {
             InitializeComponent();
@@ -65,7 +58,7 @@ namespace WindowsFormsUI
                 ShowMessageBox(ex.Message, "Error");
             }
         }
-        private void GameComplete(object sender, GameCompleteArgs e)
+        private void GameComplete(object sender, EventArgs e)
         {
             if (!CheckForMovesTxt())
             {
@@ -194,7 +187,7 @@ namespace WindowsFormsUI
                 
             }
 
-            GameCompleteEvent?.Invoke(this, new GameCompleteArgs() { Result = "Complete" });
+            GameCompleteEvent?.Invoke(this, new EventArgs());
         }
 
         private void LoadMap()
@@ -245,6 +238,7 @@ namespace WindowsFormsUI
             Bitmap image = new Bitmap(pictureBox.Image);
             newPictureBox.ClientSize = new Size(pictureBox.Size.Width, pictureBox.Size.Height);
             newPictureBox.Image = image;
+            pictureBox.Image.Dispose();
             return newPictureBox;
         }
 

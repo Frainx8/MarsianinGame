@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>C:\Users\acer\source\repos\MarsianinGame\WindowsFormsUI\bin\Debug\console\</OutputPath>
+    <OutputPath>C:\Users\acer\source\repos\MarsianinGame\WindowsFormsUI\bin\Debug\Console\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

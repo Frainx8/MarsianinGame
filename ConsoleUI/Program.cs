@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using AlgorithmLibrary;
@@ -8,10 +9,13 @@ namespace ConsoleUI
     class Program
     {
         private static string projectName = "MarsianinGame";
+        private static string consoleFolder = "Console";
         private static string logFolderFullPath;
-        private static string mapsFolder = @"..\maps";
+        private static string mapsFolder;
+        private static string mapsFolderDefaultName = "maps";
         private static string logFolderName = "log";
-        private static string mapName = $@"{mapsFolder}\map.txt";
+        private static string mapName;
+        private static string mapNameDefaultName = "map.txt";
         private static string movesName = @"..\moves.txt";
         private const int SLEEP_TIME = 300;
         private static Maps AlgorithmMap;
@@ -28,20 +32,7 @@ namespace ConsoleUI
             {
                 LoadGame(args);
 
-                if(algorithm.Result == null)
-                {
-                    ShowMap();
-                    if (algorithm.IsDead)
-                    {
-                        Console.WriteLine("The character died in the way!");
-                    }
-                    else
-                    {
-                        Console.WriteLine("There is no way to the exit!");
-                    }
-                }
-
-                else
+                if(!CheckForNullResult())
                 {
                     bool isWant;
 
@@ -87,6 +78,45 @@ namespace ConsoleUI
             Console.ReadKey();
         }
 
+        private static void SetMapsFolder()
+        {
+            string fullCurrentDirectoryPath = Environment.CurrentDirectory.TrimEnd(Path.DirectorySeparatorChar);
+            string currentDirectory = Path.GetFileName(fullCurrentDirectoryPath);
+
+            string parentFolder;
+            //If console wasn't launched from WinForms
+            if (currentDirectory.ToLower() == consoleFolder.ToLower())
+            {
+                parentFolder = System.IO.Directory.GetParent(Environment.CurrentDirectory).ToString(); 
+            }
+            else
+            {
+                //If the process is lauched from WinForms, his current directory doesn't changes.
+                parentFolder = Environment.CurrentDirectory;
+            }
+            mapsFolder = $@"{parentFolder}\{mapsFolderDefaultName}";
+        }
+        private static bool CheckForNullResult()
+        {
+            if(algorithm.Result == null)
+            {
+                return false;
+            }
+            else
+            {
+                ShowMap();
+                if (algorithm.IsDead)
+                {
+                    Console.WriteLine("The character died in the way!");
+                }
+                else
+                {
+                    Console.WriteLine("There is no way to the exit!");
+                }
+            }
+            return true;
+        }
+
         private static bool CheckIfWantSeeTheResutl()
         {
             Console.WriteLine("Do you want to see the result? Y, enter - yes, N - no.");
@@ -123,14 +153,16 @@ namespace ConsoleUI
         {
             logFolderFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}" +
                 $"\\{projectName}\\{logFolderName}";
+
+            SetMapsFolder();
+
             if (args.Length == 1)
             {
-                if(args.Contains("maps"))
-                {
-                    mapName = args[0];
-                }
-                else
-                    mapName = @$"{mapsFolder}\{args[0]}";
+                mapName = $@"{mapsFolder}\{ args[0]}";
+            }
+            else
+            {
+                mapName = $@"{mapsFolder}\{ mapNameDefaultName}";
             }
             AlgorithmMap = new Maps(mapName);
             myMap = new Maps(mapName);
