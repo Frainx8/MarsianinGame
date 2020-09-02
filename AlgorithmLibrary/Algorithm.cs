@@ -16,9 +16,7 @@ namespace AlgorithmLibrary
         private Maps map;
 
         private const int POINTSRANGE = 1;
-
-        private const int MAX_XP = 100;
-        private int currentXP = MAX_XP;
+        private int currentXP = CommonStuff.MAX_HP;
         
         public Algorithm(Maps map)
         {
@@ -78,6 +76,7 @@ namespace AlgorithmLibrary
             #region First step
 
             Point[] firstStep = FindPath(map.S, map.Q);
+            
 
             if (firstStep == null)
             {
@@ -87,6 +86,7 @@ namespace AlgorithmLibrary
             {
                 return firstStep;
             }
+
             #endregion
 
             #region Second step            
@@ -112,6 +112,7 @@ namespace AlgorithmLibrary
             if(resultOfAlgorithm != null)
             {
                 return resultOfAlgorithm;
+                
             }
             else
             {
@@ -166,7 +167,7 @@ namespace AlgorithmLibrary
 
         private void UseMedkit(Point position)
         {
-            currentXP = MAX_XP;
+            currentXP = CommonStuff.MAX_HP;
             map.DeleteObject(position);
         }
 
@@ -242,7 +243,7 @@ namespace AlgorithmLibrary
                 foreach (string[] aPermutation in permutationsOfCombination)
                 {
                     Point currentPosition = map.S;
-                    currentXP = MAX_XP;
+                    currentXP = CommonStuff.MAX_HP;
                     RestoreObjects(deletedObjects);
                     List<Point> wholePath = new List<Point>();
 

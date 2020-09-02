@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using AlgorithmLibrary;
 
 namespace WindowsFormsUI
 {
@@ -11,10 +12,8 @@ namespace WindowsFormsUI
         ///  The main entry point for the application.
         /// </summary>
         /// 
-        static string consoleFolder = "Console";
-        static string consoleExePath = $@"{consoleFolder}\solution.exe";
-        static string mapsFolder = "maps";
-        private static string mapName = $@"{mapsFolder}\map.txt";
+        static string consoleExePath = $@"{CommonStuff.consoleFolder}\solution.exe";
+        private static string mapName = $@"{CommonStuff.mapsFolderDefaultName}\map.txt";
         
         [STAThread]
         static void Main(string[] args)
@@ -51,7 +50,7 @@ namespace WindowsFormsUI
             {
                 if (args.Length == 1)
                 {
-                    mapName = $"{mapsFolder}\\{args[0]}";
+                    mapName = $"{CommonStuff.mapsFolderDefaultName}\\{args[0]}";
                 }
                 Application.SetHighDpiMode(HighDpiMode.SystemAware);
                 Application.EnableVisualStyles();

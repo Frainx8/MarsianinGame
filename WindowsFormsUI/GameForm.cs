@@ -10,12 +10,8 @@ namespace WindowsFormsUI
     public partial class GameForm : Form
     {
         private MainForm mainForm;
-        private static string projectName = "MarsianinGame";
-        private static string logFolderName = "log";
         private static string movesName = @"moves.txt";
-        private const int SLEEP_TIME = 300;
-        private const int MAX_XP = 100;
-        private int currentHP = MAX_XP;
+        private int currentHP = CommonStuff.MAX_HP;
         private Maps AlgorithmMap;
         private Maps myMap;
         private Algorithm algorithm;
@@ -49,12 +45,12 @@ namespace WindowsFormsUI
             }
             catch (ArgumentException ex)
             {
-                MyDebug.WriteExceptionInFile(ex, projectName, logFolderName);
+                MyDebug.WriteExceptionInFile(ex, CommonStuff.projectName, CommonStuff.logFolderName);
                 ShowMessageBox(ex.Message, "Error");
             }
             catch (Exception ex)
             {
-                MyDebug.WriteExceptionInFile(ex, projectName, logFolderName);
+                MyDebug.WriteExceptionInFile(ex, CommonStuff.projectName, CommonStuff.logFolderName);
                 ShowMessageBox(ex.Message, "Error");
             }
         }
@@ -183,7 +179,7 @@ namespace WindowsFormsUI
                 labelSteps.Text = numberOfSteps.ToString();
                 labelHP.Text = currentHP.ToString();
 
-                await Task.Delay(SLEEP_TIME);
+                await Task.Delay(CommonStuff.SLEEP_TIME);
                 
             }
 
@@ -299,7 +295,7 @@ namespace WindowsFormsUI
         }
         private void UseMedkit()
         {
-            currentHP = MAX_XP;
+            currentHP = CommonStuff.MAX_HP;
         }
 
         private void GameForm_Shown(object sender, EventArgs e)

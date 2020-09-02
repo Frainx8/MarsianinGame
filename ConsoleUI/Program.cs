@@ -8,24 +8,17 @@ namespace ConsoleUI
 {
     class Program
     {
-        private static string projectName = "MarsianinGame";
-        private static string consoleFolder = "Console";
         private static string logFolderFullPath;
         private static string mapsFolder;
-        private static string mapsFolderDefaultName = "maps";
-        private static string logFolderName = "log";
         private static string mapName;
-        private static string mapNameDefaultName = "map.txt";
         private static string movesName = @"..\moves.txt";
-        private const int SLEEP_TIME = 300;
         private static Maps AlgorithmMap;
         private static Maps myMap;
         private static Algorithm algorithm;
 
         private static int stepCount = -1;
 
-        private const int MAX_XP = 100;
-        private static int currentXP = MAX_XP;
+        private static int currentXP = CommonStuff.MAX_HP;
         static void Main(string[] args)
         {
             try
@@ -64,7 +57,7 @@ namespace ConsoleUI
             catch (ArgumentException e)
             {
                 Console.WriteLine(e.Message);
-                MyDebug.WriteExceptionInFile(e, projectName, logFolderName);
+                MyDebug.WriteExceptionInFile(e, CommonStuff.projectName, CommonStuff.logFolderName);
                 Console.WriteLine($"The error is in the {logFolderFullPath}.");
             }
             catch(Exception ex)
@@ -73,7 +66,7 @@ namespace ConsoleUI
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.StackTrace);
                 Console.WriteLine($"The error is in the {logFolderFullPath}.");
-                MyDebug.WriteExceptionInFile(ex, projectName, logFolderName);
+                MyDebug.WriteExceptionInFile(ex, CommonStuff.projectName, CommonStuff.logFolderName);
             }
             Console.ReadKey();
         }
@@ -85,7 +78,7 @@ namespace ConsoleUI
 
             string parentFolder;
             //If console wasn't launched from WinForms
-            if (currentDirectory.ToLower() == consoleFolder.ToLower())
+            if (currentDirectory.ToLower() == CommonStuff.consoleFolder.ToLower())
             {
                 parentFolder = System.IO.Directory.GetParent(Environment.CurrentDirectory).ToString(); 
             }
@@ -94,11 +87,12 @@ namespace ConsoleUI
                 //If the process is lauched from WinForms, his current directory doesn't changes.
                 parentFolder = Environment.CurrentDirectory;
             }
-            mapsFolder = $@"{parentFolder}\{mapsFolderDefaultName}";
+            mapsFolder = $@"{parentFolder}\{CommonStuff.mapsFolderDefaultName}";
         }
         private static bool CheckForNullResult()
         {
-            if(algorithm.Result == null)
+            
+            if(algorithm.Result != null)
             {
                 return false;
             }
@@ -152,7 +146,7 @@ namespace ConsoleUI
         private static void LoadGame(string[] args)
         {
             logFolderFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}" +
-                $"\\{projectName}\\{logFolderName}";
+                $"\\{CommonStuff.projectName}\\{CommonStuff.logFolderName}";
 
             SetMapsFolder();
 
@@ -162,7 +156,7 @@ namespace ConsoleUI
             }
             else
             {
-                mapName = $@"{mapsFolder}\{ mapNameDefaultName}";
+                mapName = $@"{mapsFolder}\{ CommonStuff.mapNameDefaultName}";
             }
             AlgorithmMap = new Maps(mapName);
             myMap = new Maps(mapName);
@@ -191,7 +185,7 @@ namespace ConsoleUI
                 }
                 ShowInfo();
 
-                Thread.Sleep(SLEEP_TIME);
+                Thread.Sleep(CommonStuff.SLEEP_TIME);
                     
             }
         }
@@ -233,7 +227,7 @@ namespace ConsoleUI
 
         private static void UseMedkit(Point position)
         {
-            currentXP = MAX_XP;
+            currentXP = CommonStuff.MAX_HP;
             myMap.DeleteObject(position);
         }
 
