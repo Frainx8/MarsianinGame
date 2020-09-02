@@ -2,6 +2,7 @@
 {
     public static class CommonStuff
     {
+        public const string movesDefaultName = "moves.txt";
         public const string projectName = "MarsianinGame";
         public const string consoleFolder = "Console";
         public const string mapNameDefaultName = "map.txt";

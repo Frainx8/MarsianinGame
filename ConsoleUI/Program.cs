@@ -10,8 +10,9 @@ namespace ConsoleUI
     {
         private static string logFolderFullPath;
         private static string mapsFolder;
+        private static string moves;
         private static string mapName;
-        private static string movesName = @"..\moves.txt";
+        private static string parentFolder;
         private static Maps AlgorithmMap;
         private static Maps myMap;
         private static Algorithm algorithm;
@@ -31,7 +32,7 @@ namespace ConsoleUI
 
                     isWant = CheckIfWantSeeTheResutl();
 
-                    algorithm.WriteResultToFile(movesName);
+                    algorithm.WriteResultToFile(moves);
 
                     if (isWant)
                     {
@@ -40,7 +41,7 @@ namespace ConsoleUI
 
                     if (CheckForMovesTxt())
                     {
-                        Console.WriteLine($"The results are written to {movesName}");
+                        Console.WriteLine($"The results are written to {moves}");
                     }
                     else
                     {
@@ -71,23 +72,37 @@ namespace ConsoleUI
             Console.ReadKey();
         }
 
+        private static void SetParentFolder()
+        {
+            parentFolder = ReturnParentFolder();
+        }
+
         private static void SetMapsFolder()
+        {
+            mapsFolder = $@"{parentFolder}\{CommonStuff.mapsFolderDefaultName}";
+        }
+
+        private static void SetMoves()
+        {
+            moves = $@"{parentFolder}\{CommonStuff.movesDefaultName}";
+        }
+
+        private static string ReturnParentFolder()
         {
             string fullCurrentDirectoryPath = Environment.CurrentDirectory.TrimEnd(Path.DirectorySeparatorChar);
             string currentDirectory = Path.GetFileName(fullCurrentDirectoryPath);
-
             string parentFolder;
             //If console wasn't launched from WinForms
             if (currentDirectory.ToLower() == CommonStuff.consoleFolder.ToLower())
             {
-                parentFolder = System.IO.Directory.GetParent(Environment.CurrentDirectory).ToString(); 
+                parentFolder = System.IO.Directory.GetParent(Environment.CurrentDirectory).ToString();
             }
             else
             {
                 //If the process is lauched from WinForms, his current directory doesn't changes.
                 parentFolder = Environment.CurrentDirectory;
             }
-            mapsFolder = $@"{parentFolder}\{CommonStuff.mapsFolderDefaultName}";
+            return parentFolder;
         }
         private static bool CheckForNullResult()
         {
@@ -148,6 +163,8 @@ namespace ConsoleUI
             logFolderFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}" +
                 $"\\{CommonStuff.projectName}\\{CommonStuff.logFolderName}";
 
+            SetParentFolder();
+            SetMoves();
             SetMapsFolder();
 
             if (args.Length == 1)
@@ -237,7 +254,7 @@ namespace ConsoleUI
         /// <returns></returns>
         private static bool CheckForMovesTxt()
         {
-            if (System.IO.File.Exists(movesName))
+            if (System.IO.File.Exists(moves))
             {
                 return true;
             }

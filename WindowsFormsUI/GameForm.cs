@@ -10,7 +10,6 @@ namespace WindowsFormsUI
     public partial class GameForm : Form
     {
         private MainForm mainForm;
-        private static string movesName = @"moves.txt";
         private int currentHP = CommonStuff.MAX_HP;
         private Maps AlgorithmMap;
         private Maps myMap;
@@ -66,7 +65,7 @@ namespace WindowsFormsUI
 
         private static bool CheckForMovesTxt()
         {
-            if (System.IO.File.Exists(movesName))
+            if (System.IO.File.Exists(CommonStuff.movesDefaultName))
             {
                 return true;
             }
@@ -302,7 +301,7 @@ namespace WindowsFormsUI
         {
             if (CheckForResult())
             {
-                algorithm.WriteResultToFile(movesName);
+                algorithm.WriteResultToFile(CommonStuff.movesDefaultName);
 
                 GameCompleteEvent += GameComplete;
 
