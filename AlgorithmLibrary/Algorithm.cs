@@ -11,7 +11,7 @@ namespace AlgorithmLibrary
         public Point[] Result { get; private set; }
         public string Directions { get; private set; }
 
-        private const int  MAX_STEPS_PER_PLACE = 10;
+        private const int  MAX_STEPS_PER_PLACE = 5;
         public bool IsDead { get; private set; }
 
         private Maps map;
@@ -77,6 +77,7 @@ namespace AlgorithmLibrary
             #region First step
 
             Point[] firstStep = FindPath(map.S, map.Q);
+            Point[] anotherWayToQ;
 
             if (firstStep == null)
             {
@@ -88,11 +89,8 @@ namespace AlgorithmLibrary
             }
             else
             {
-                Point[] anotherWayToQ = FindWayToQ(map.S, map.Q);
-                if(anotherWayToQ != null)
-                {
-                    return anotherWayToQ;
-                }
+                anotherWayToQ = FindWayToQ(map.S, map.Q);
+
             }
 
             #endregion
@@ -119,14 +117,27 @@ namespace AlgorithmLibrary
 
             if(resultOfAlgorithm != null)
             {
-                return resultOfAlgorithm;
-                
+                if(anotherWayToQ != null)
+                {
+                    if (anotherWayToQ.Count() < resultOfAlgorithm.Count())
+                    {
+                        return anotherWayToQ;
+                    }
+                    else
+                    {
+                        return resultOfAlgorithm;
+                    }
+                }
+                else
+                {
+                    return resultOfAlgorithm;
+                }
             }
             else
             {
                 IsDead = map.IsThereFireOnMap();
 
-                return resultOfAlgorithm;
+                return null;
             }
 
             #endregion
@@ -164,7 +175,7 @@ namespace AlgorithmLibrary
                 else if (Maps.FIRE_POWER.Contains(tempObject))
                 {
                     int firePower = int.Parse(tempObject.ToString());
-                    if(GetDamage(firePower))
+                    if (GetDamage(firePower))
                     {
                         return true;
                     }
@@ -256,6 +267,12 @@ namespace AlgorithmLibrary
                     RestoreObjects(deletedObjects);
                     List<Point> wholePath = new List<Point>();
 
+#if DEBUG
+                    foreach (string letter in aPermutation)
+                        Console.Write(letter);
+                    Console.WriteLine();
+#endif
+
                     bool breakFlag = false;
                     foreach (string letter in aPermutation)
                     {
@@ -309,7 +326,6 @@ namespace AlgorithmLibrary
                     }
                     else if(wholePath != null)
                     {
-                        
                         Point[] pathToQ = FindWayToQ(currentPosition, map.Q);
                         if (pathToQ == null)
                         {
@@ -526,6 +542,8 @@ namespace AlgorithmLibrary
 
             Point[] foundedPath = null;
 
+            bool isGoalFounded = false;
+
             while (openList.Any())
             {
                 IEnumerable<Cell> query = openList.OrderBy(x => x.F);
@@ -552,11 +570,13 @@ namespace AlgorithmLibrary
 
                     Cell newCell = new Cell(neighbor, current.G + POINTSRANGE + visitedPlaces[neighbor], ReturnH(neighbor, goal), current);
 
-                    if (newCell.Point.Equals(goal))
+                    if (!isGoalFounded && newCell.Point.Equals(goal))
                     {
                         foundedPath = ReturnPath(newCell);
+                        visitedPlaces[newCell.Point]++;
+                        isGoalFounded = true;
                     }
-                    if (!closedList.Contains(newCell))
+                    else if (!closedList.Contains(newCell))
                     {
                         if (openList.Contains(newCell))
                         {
@@ -580,27 +600,43 @@ namespace AlgorithmLibrary
             }
             else
             {
-                if(visitedPlaces.Count >= numberOfWalkablePlaces)
+#if DEBUG
+                Console.WriteLine($"Visited places {visitedPlaces.Count}");
+                Console.WriteLine($"Number Of Walkable Places {numberOfWalkablePlaces}");
+                ShowPathToConsole(foundedPath);
+                Console.WriteLine();
+#endif
+                bool isTherePlacesLessMax = false;
+
+#if DEBUG
+                foreach (var item in visitedPlaces.Values)
                 {
-                    bool isTherePlacesLessMax = false;
-                    foreach(int value in visitedPlaces.Values)
+                    Console.WriteLine(item);
+                }
+#endif
+                foreach (int value in visitedPlaces.Values)
+                {
+                    if (value < MAX_STEPS_PER_PLACE)
                     {
-                        if(value < MAX_STEPS_PER_PLACE)
-                        {
-                            isTherePlacesLessMax = true;
-                            break;
-                        }
+                        isTherePlacesLessMax = true;
+                        break;
                     }
-                    if(!isTherePlacesLessMax)
-                    {
-                        return null;
-                    }
+                }
+                if (!isTherePlacesLessMax)
+                {
+                    //Console.WriteLine(true);
+                    return null;
                 }
 
                 int tempHP = currentHP;
 
                 if (!TakeDamageFromPath(foundedPath))
                 {
+//#if DEBUG
+//                    ShowPathToConsole(foundedPath);
+//                    Console.WriteLine();
+//                    Console.WriteLine();
+//#endif
                     return foundedPath;
                 }
                 else
