@@ -11,12 +11,13 @@ namespace AlgorithmLibrary
         public Point[] Result { get; private set; }
         public string Directions { get; private set; }
 
+        private const int  MAX_STEPS_PER_PLACE = 10;
         public bool IsDead { get; private set; }
 
         private Maps map;
 
         private const int POINTSRANGE = 1;
-        private int currentXP = CommonStuff.MAX_HP;
+        private int currentHP = CommonStuff.MAX_HP;
         
         public Algorithm(Maps map)
         {
@@ -76,7 +77,6 @@ namespace AlgorithmLibrary
             #region First step
 
             Point[] firstStep = FindPath(map.S, map.Q);
-            
 
             if (firstStep == null)
             {
@@ -85,6 +85,14 @@ namespace AlgorithmLibrary
             else if(!IsThereDoor(firstStep) && !IsThereFire(firstStep))
             {
                 return firstStep;
+            }
+            else
+            {
+                Point[] anotherWayToQ = FindWayToQ(map.S, map.Q);
+                if(anotherWayToQ != null)
+                {
+                    return anotherWayToQ;
+                }
             }
 
             #endregion
@@ -124,15 +132,15 @@ namespace AlgorithmLibrary
         }
 
         /// <summary>
-        /// Take damage using currentXP.
+        /// Take damage using currentHP.
         /// </summary>
         /// <param name="firePower">Fire power from 1 to 5.</param>
-        /// <returns>Return true if currentXP equals or below zero else false.</returns>
+        /// <returns>Return true if currentHP equals or below zero else false.</returns>
         private bool GetDamage(int firePower)
         {
             int damage = 20;
-            currentXP -= damage * firePower;
-            if (currentXP <= 0)
+            currentHP -= damage * firePower;
+            if (currentHP <= 0)
             {
                 return true;
             }
@@ -167,7 +175,7 @@ namespace AlgorithmLibrary
 
         private void UseMedkit(Point position)
         {
-            currentXP = CommonStuff.MAX_HP;
+            currentHP = CommonStuff.MAX_HP;
             map.DeleteObject(position);
         }
 
@@ -243,13 +251,20 @@ namespace AlgorithmLibrary
                 foreach (string[] aPermutation in permutationsOfCombination)
                 {
                     Point currentPosition = map.S;
-                    currentXP = CommonStuff.MAX_HP;
+                    currentHP = CommonStuff.MAX_HP;
                     RestoreObjects(deletedObjects);
                     List<Point> wholePath = new List<Point>();
+
+                    //Debug
+                    foreach (string letter in aPermutation)
+                        Console.Write(letter);
+                    Console.WriteLine();
+                    //
 
                     bool breakFlag = false;
                     foreach (string letter in aPermutation)
                     {
+                        
                         Point goal = _objectsOfMap[letter];
                         Point[] tempPath = FindPath(currentPosition, goal);
                         if (tempPath == null)
@@ -299,28 +314,22 @@ namespace AlgorithmLibrary
                     }
                     else if(wholePath != null)
                     {
-                        Point[] pathToQ = FindPath(currentPosition, map.Q);
-                        if (pathToQ == null || IsThereDoor(pathToQ))
+                        
+                        Point[] pathToQ = FindWayToQ(currentPosition, map.Q);
+                        if (pathToQ == null)
                         {
                             continue;
                         }
                         else
                         {
 
-                            if (!TakeDamageFromPath(pathToQ))
-                            {
-                                wholePath.AddRange(pathToQ);
+                            wholePath.AddRange(pathToQ);
 
-                                if(wholePath.Count < minNumberOfSteps)
-                                {
-                                    
-                                    minNumberOfSteps = wholePath.Count;
-                                    shortestWay = wholePath.ToArray();
-                                }
-                            }
-                            else
+                            if (wholePath.Count < minNumberOfSteps)
                             {
-                                continue;
+
+                                minNumberOfSteps = wholePath.Count;
+                                shortestWay = wholePath.ToArray();
                             }
 
                         }
@@ -449,7 +458,7 @@ namespace AlgorithmLibrary
 
             int numberOfMedkit = 1;
 
-            while (openList.Any() == true)
+            while (openList.Any())
             {
                 Cell current = openList.First();
 
@@ -494,6 +503,121 @@ namespace AlgorithmLibrary
             return result;
         }
 
+        private Point[] FindWayToQ(Point start, Point goal)
+        {
+            Dictionary<Point, int> visitedPlaces = new Dictionary<Point, int>();
+            int numberOfWalkablePlaces = ScanWalkAbleTerritory(start);
+            return FindWayToQ(start, goal, visitedPlaces, numberOfWalkablePlaces);
+        }
+
+        private Point[] FindWayToQ(Point start, Point goal, Dictionary<Point, int> visitedPlaces, int numberOfWalkablePlaces)
+        {
+            Cell source = new Cell() { Parent = null, Point = start };
+
+            List<Cell> openList = new List<Cell>()
+            {
+                source
+            };
+
+            if(!visitedPlaces.Any() || visitedPlaces == null)
+            {
+                //Keeps how many times a place has been visited.
+                visitedPlaces = new Dictionary<Point, int>();
+
+                visitedPlaces.Add(source.Point, 0);
+            }
+
+            List<Cell> closedList = new List<Cell>();
+
+            Point[] foundedPath = null;
+
+            while (openList.Any())
+            {
+                IEnumerable<Cell> query = openList.OrderBy(x => x.F);
+                Cell current = query.First();
+                visitedPlaces[current.Point]++;
+                openList.Remove(current);
+                closedList.Add(current);
+                Point[] neighbors = map.ReturnNeighbours(current.Point);
+                foreach (Point neighbor in neighbors)
+                {
+                    char tempObject = map.ReturnObject(neighbor);
+                    if (tempObject != '.')
+                    {
+                        if (Maps.DOORS.Contains(tempObject))
+                        {
+                            continue;
+                        }
+                    }
+
+                    if (!visitedPlaces.ContainsKey(neighbor))
+                    {
+                        visitedPlaces.Add(neighbor, 0);
+                    }
+
+                    Cell newCell = new Cell(neighbor, current.G + POINTSRANGE + visitedPlaces[neighbor], ReturnH(neighbor, goal), current);
+
+                    if (newCell.Point.Equals(goal))
+                    {
+                        foundedPath = ReturnPath(newCell);
+                    }
+                    if (!closedList.Contains(newCell))
+                    {
+                        if (openList.Contains(newCell))
+                        {
+                            int index = openList.IndexOf(newCell);
+                            if (openList[index].F > newCell.F)
+                            {
+                                openList.RemoveAt(index);
+                                openList.Add(newCell);
+                            }
+                        }
+                        else
+                        {
+                            openList.Add(newCell);
+                        }
+                    }
+                }
+            }
+            if(foundedPath == null)
+            {
+                return null;
+            }
+            else
+            {
+                if(visitedPlaces.Count >= numberOfWalkablePlaces)
+                {
+                    bool isTherePlacesLessMax = false;
+                    foreach(int value in visitedPlaces.Values)
+                    {
+                        if(value < MAX_STEPS_PER_PLACE)
+                        {
+                            isTherePlacesLessMax = true;
+                            break;
+                        }
+                    }
+                    if(!isTherePlacesLessMax)
+                    {
+                        return null;
+                    }
+                }
+
+                int tempHP = currentHP;
+
+                if (!TakeDamageFromPath(foundedPath))
+                {
+                    return foundedPath;
+                }
+                else
+                {
+                    currentHP = tempHP;
+                    return FindWayToQ(start, goal, visitedPlaces, numberOfWalkablePlaces);
+                }
+            }
+            
+            
+        }
+
         /// <summary>
         /// Uses Cell's parents to get the full path.
         /// </summary>
@@ -522,6 +646,7 @@ namespace AlgorithmLibrary
             }
         }
 
+
         /// <summary>
         /// Manhattan Distance for A* algorithm.
         /// </summary>
@@ -534,6 +659,76 @@ namespace AlgorithmLibrary
             return Math.Abs(current.X - goal.X) + Math.Abs(current.Y - goal.Y);
         }
 
+        private int ScanWalkAbleTerritory(Point start)
+        {
+            Cell source = new Cell(start, null);
+            List<Cell> openList = new List<Cell>()
+                {
+                    source,
+                };
+
+            List<Cell> closedList = new List<Cell>();
+
+            while (openList.Any())
+            {
+                Cell current = openList.First();
+
+                openList.Remove(current);
+                closedList.Add(current);
+                Point[] neighbors = map.ReturnNeighbours(current.Point);
+                foreach (Point neighbor in neighbors)
+                {
+                    char tempObject = map.ReturnObject(neighbor);
+
+                    if (tempObject != '.')
+                    {
+                        if (Maps.DOORS.Contains(tempObject))
+                        {
+                            continue;
+                        }
+                    }
+
+                    Cell newCell = new Cell(neighbor, current);
+
+                    if (!closedList.Contains(newCell))
+                    {
+
+                        if (openList.Contains(newCell))
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            openList.Add(newCell);
+                        }
+                    }
+                }
+            }
+
+            return closedList.Count();
+        }
+
         #endregion
+
+        private void ShowPathToConsole(Point[] path)
+        {
+            int index = 0;
+            for (int y = 0; y < map.Map.GetLength(0); y++)
+            {
+                for (int x = 0; x < map.Map.GetLength(1); x++)
+                {
+                    if (path.Contains(new Point(x, y)))
+                    {
+                        Console.Write('P');
+                        index++;
+                    }
+                    else
+                        Console.Write(map.Map[y, x]);
+                    Console.Write(" ");
+                }
+                Console.WriteLine();
+            }
+            
+        }
     }
 }
