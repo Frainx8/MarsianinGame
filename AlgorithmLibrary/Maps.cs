@@ -200,6 +200,18 @@ namespace AlgorithmLibrary
             }
         }
 
+        public bool IsThereFireOnMap()
+        {
+            for(int i = 1; i < 6; i++)
+            {
+                if (!ReturnAnElementPositionOnMap((char)i).Equals(Point.nullPoint))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /// <summary>
         /// Returns the nearest neigbors of the point.
         /// </summary>

@@ -124,7 +124,8 @@ namespace AlgorithmLibrary
             }
             else
             {
-                IsDead = true;
+                IsDead = map.IsThereFireOnMap();
+
                 return resultOfAlgorithm;
             }
 
@@ -254,12 +255,6 @@ namespace AlgorithmLibrary
                     currentHP = CommonStuff.MAX_HP;
                     RestoreObjects(deletedObjects);
                     List<Point> wholePath = new List<Point>();
-
-                    //Debug
-                    foreach (string letter in aPermutation)
-                        Console.Write(letter);
-                    Console.WriteLine();
-                    //
 
                     bool breakFlag = false;
                     foreach (string letter in aPermutation)
