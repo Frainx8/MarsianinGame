@@ -113,7 +113,7 @@ namespace AlgorithmLibrary
                             throw new ArgumentException($"It look like the map dosn't have {y + 1} row");
                         }
 
-                        if(charasters.Length != sizeOfMap[1])
+                        if(charasters.Length < sizeOfMap[1])
                         {
                             throw new ArgumentException($"The {y + 1} row is too short!");
                         }
