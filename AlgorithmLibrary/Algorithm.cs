@@ -11,7 +11,7 @@ namespace AlgorithmLibrary
         public Point[] Result { get; private set; }
         public string Directions { get; private set; }
 
-        private const int  MAX_STEPS_PER_PLACE = 5;
+        private const int  MAX_STEPS_PER_PLACE = 10;
         public bool IsDead { get; private set; }
 
         private Maps map;
@@ -267,7 +267,7 @@ namespace AlgorithmLibrary
                     RestoreObjects(deletedObjects);
                     List<Point> wholePath = new List<Point>();
 
-#if DEBUG
+#if false
                     foreach (string letter in aPermutation)
                         Console.Write(letter);
                     Console.WriteLine();
@@ -600,7 +600,7 @@ namespace AlgorithmLibrary
             }
             else
             {
-#if DEBUG
+#if false
                 Console.WriteLine($"Visited places {visitedPlaces.Count}");
                 Console.WriteLine($"Number Of Walkable Places {numberOfWalkablePlaces}");
                 ShowPathToConsole(foundedPath);
@@ -608,7 +608,7 @@ namespace AlgorithmLibrary
 #endif
                 bool isTherePlacesLessMax = false;
 
-#if DEBUG
+#if false
                 foreach (var item in visitedPlaces.Values)
                 {
                     Console.WriteLine(item);
@@ -632,11 +632,11 @@ namespace AlgorithmLibrary
 
                 if (!TakeDamageFromPath(foundedPath))
                 {
-//#if DEBUG
-//                    ShowPathToConsole(foundedPath);
-//                    Console.WriteLine();
-//                    Console.WriteLine();
-//#endif
+#if false
+                    ShowPathToConsole(foundedPath);
+                    Console.WriteLine();
+                    Console.WriteLine();
+#endif
                     return foundedPath;
                 }
                 else
