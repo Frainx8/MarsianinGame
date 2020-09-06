@@ -63,7 +63,8 @@ namespace WindowsFormsUI
                 
                 else
                 {
-                    Application.Run(new MainForm(mapName));
+                    MainForm mainForm = new MainForm(mapName);
+                    Application.Run(mainForm);
                 }
             }
             

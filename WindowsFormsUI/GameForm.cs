@@ -38,9 +38,17 @@ namespace WindowsFormsUI
 
         private void GameForm_Load(object sender, EventArgs _event)
         {
+            PleaseWaitForm pleaseWaitForm;
             try
             {
+                pleaseWaitForm = new PleaseWaitForm();
+
+                pleaseWaitForm.Show();
+                pleaseWaitForm.Refresh();
+
                 LoadMap();
+
+                pleaseWaitForm.Dispose();
             }
             catch (ArgumentException ex)
             {
