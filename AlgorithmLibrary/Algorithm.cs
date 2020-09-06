@@ -8,17 +8,15 @@ namespace AlgorithmLibrary
 {
     public class Algorithm
     {
+        private Maps map;
+        private const int POINTSRANGE = 1;
+        private int currentHP = CommonStuff.MAX_HP;
+        private int BASIC_FIRE_DAMAGE = 20;
+        private const int MAX_STEPS_PER_PLACE = 10;
+        public bool IsDead { get; private set; }
         public Point[] Result { get; private set; }
         public string Directions { get; private set; }
 
-        private const int  MAX_STEPS_PER_PLACE = 10;
-        public bool IsDead { get; private set; }
-
-        private Maps map;
-
-        private const int POINTSRANGE = 1;
-        private int currentHP = CommonStuff.MAX_HP;
-        
         public Algorithm(Maps map)
         {
             this.map = map;
@@ -76,7 +74,7 @@ namespace AlgorithmLibrary
         {
             #region First step
 
-            Point[] firstStep = FindPath(map.S, map.Q);
+            Point[] firstStep = FindPathSimple(map.S, map.Q);
             Point[] anotherWayToQ;
 
             if (firstStep == null)
@@ -89,8 +87,7 @@ namespace AlgorithmLibrary
             }
             else
             {
-                anotherWayToQ = FindWayToQ(map.S, map.Q);
-
+                anotherWayToQ = FindPath(map.S, map.Q);
             }
 
             #endregion
@@ -115,24 +112,27 @@ namespace AlgorithmLibrary
 
             Point[] resultOfAlgorithm = ReturnShortestPathFromCombinations(allCombinations, allObjects);
 
-            if(resultOfAlgorithm != null)
+            if (anotherWayToQ != null && resultOfAlgorithm != null)
             {
-                if(anotherWayToQ != null)
+                if (anotherWayToQ.Count() < resultOfAlgorithm.Count())
                 {
-                    if (anotherWayToQ.Count() < resultOfAlgorithm.Count())
-                    {
-                        return anotherWayToQ;
-                    }
-                    else
-                    {
-                        return resultOfAlgorithm;
-                    }
+                    return anotherWayToQ;
                 }
                 else
                 {
                     return resultOfAlgorithm;
                 }
             }
+            else if (resultOfAlgorithm != null)
+            {
+                return resultOfAlgorithm;
+            }
+
+            else if (anotherWayToQ != null)
+            {
+                return anotherWayToQ;
+            }
+
             else
             {
                 IsDead = map.IsThereFireOnMap();
@@ -150,8 +150,7 @@ namespace AlgorithmLibrary
         /// <returns>Return true if currentHP equals or below zero else false.</returns>
         private bool GetDamage(int firePower)
         {
-            int damage = 20;
-            currentHP -= damage * firePower;
+            currentHP -= BASIC_FIRE_DAMAGE * firePower;
             if (currentHP <= 0)
             {
                 return true;
@@ -169,11 +168,17 @@ namespace AlgorithmLibrary
         {
             foreach (Point position in path)
             {
+#if false
+                Console.WriteLine(position.ToString());
+#endif
                 char tempObject = map.ReturnObject(position);
                 if (tempObject == '.')
                     continue;
                 else if (Maps.FIRE_POWER.Contains(tempObject))
                 {
+#if false
+                    Console.WriteLine("Hurt!");
+#endif
                     int firePower = int.Parse(tempObject.ToString());
                     if (GetDamage(firePower))
                     {
@@ -273,50 +278,57 @@ namespace AlgorithmLibrary
                     Console.WriteLine();
 #endif
 
+
+
                     bool breakFlag = false;
                     foreach (string letter in aPermutation)
                     {
                         
                         Point goal = _objectsOfMap[letter];
                         Point[] tempPath = FindPath(currentPosition, goal);
-                        if (tempPath == null)
+#if false
+                        string[] example = { "b", "H1", "a" };
+                        bool Res()
                         {
-                            breakFlag = true;
-                            break;
+                            if (aPermutation.Length != 3)
+                                return false;
+                            for (int i = 0; i < 3; i++)
+                            {
+                                if (example[i] != aPermutation[i])
+                                    return false;
+                            }
+                            return true;
                         }
-                        else if(IsThereDoor(tempPath))
+                        if (Res())
+                        {
+                            ShowPathToConsole(tempPath.ToArray());
+                        }
+#endif
+                        if (tempPath == null)
                         {
                             breakFlag = true;
                             break;
                         }
                         else
                         {
-                            
-                            if(!TakeDamageFromPath(tempPath))
+                            currentPosition = goal;
+                            char tempObject = map.ReturnObject(goal);
+                            wholePath.AddRange(tempPath);
+                            wholePath.Remove(wholePath.Last());
+
+                            if (Maps.MEDKIT == tempObject)
                             {
-                                currentPosition = goal;
-                                char tempObject = map.ReturnObject(goal);
-                                wholePath.AddRange(tempPath);
-                                wholePath.Remove(wholePath.Last());
-                                if(Maps.MEDKIT == tempObject)
-                                {
-                                    UseMedkit(goal);
-                                }
-                                else if(Maps.KEYS.Contains(tempObject))
-                                {
-                                    map.DeleteObject(goal);
-                                    char door = Char.ToUpper(tempObject);
-                                    Point doorPosition = map.ReturnAnElementPositionOnMap(door);
-                                    map.DeleteObject(doorPosition);
-                                    deletedObjects.Add(doorPosition, door);
-                                }
-                                deletedObjects.Add(goal, tempObject);
+                                UseMedkit(goal);
                             }
-                            else
+                            else if (Maps.KEYS.Contains(tempObject))
                             {
-                                breakFlag = true;
-                                break;
+                                map.DeleteObject(goal);
+                                char door = Char.ToUpper(tempObject);
+                                Point doorPosition = map.ReturnAnElementPositionOnMap(door);
+                                map.DeleteObject(doorPosition);
+                                deletedObjects.Add(doorPosition, door);
                             }
+                            deletedObjects.Add(goal, tempObject);
 
                         }
                     }
@@ -326,7 +338,7 @@ namespace AlgorithmLibrary
                     }
                     else if(wholePath != null)
                     {
-                        Point[] pathToQ = FindWayToQ(currentPosition, map.Q);
+                        Point[] pathToQ = FindPath(currentPosition, map.Q);
                         if (pathToQ == null)
                         {
                             continue;
@@ -361,7 +373,7 @@ namespace AlgorithmLibrary
         /// <param name="start">The start Point.</param>
         /// <param name="goal">The destiny point.</param>
         /// <returns>The array of Point from which the path is.</returns>
-        private Point[] FindPath(Point start, Point goal)
+        private Point[] FindPathSimple(Point start, Point goal)
         {
             Cell source = new Cell() { Parent = null, Point = start };
 
@@ -514,14 +526,14 @@ namespace AlgorithmLibrary
             return result;
         }
 
-        private Point[] FindWayToQ(Point start, Point goal)
+        private Point[] FindPath(Point start, Point goal)
         {
             Dictionary<Point, int> visitedPlaces = new Dictionary<Point, int>();
             int numberOfWalkablePlaces = ScanWalkAbleTerritory(start);
-            return FindWayToQ(start, goal, visitedPlaces, numberOfWalkablePlaces);
+            return FindPath(start, goal, visitedPlaces, numberOfWalkablePlaces);
         }
 
-        private Point[] FindWayToQ(Point start, Point goal, Dictionary<Point, int> visitedPlaces, int numberOfWalkablePlaces)
+        private Point[] FindPath(Point start, Point goal, Dictionary<Point, int> visitedPlaces, int numberOfWalkablePlaces)
         {
             Cell source = new Cell() { Parent = null, Point = start };
 
@@ -601,8 +613,10 @@ namespace AlgorithmLibrary
             else
             {
 #if false
-                Console.WriteLine($"Visited places {visitedPlaces.Count}");
-                Console.WriteLine($"Number Of Walkable Places {numberOfWalkablePlaces}");
+                //Console.WriteLine($"Visited places {visitedPlaces.Count}");
+                //Console.WriteLine($"Number Of Walkable Places {numberOfWalkablePlaces}");
+                Console.WriteLine($"HP - {currentHP}");
+                Console.WriteLine($"Points - {foundedPath.Count()}");
                 ShowPathToConsole(foundedPath);
                 Console.WriteLine();
 #endif
@@ -624,7 +638,6 @@ namespace AlgorithmLibrary
                 }
                 if (!isTherePlacesLessMax)
                 {
-                    //Console.WriteLine(true);
                     return null;
                 }
 
@@ -632,17 +645,14 @@ namespace AlgorithmLibrary
 
                 if (!TakeDamageFromPath(foundedPath))
                 {
-#if false
-                    ShowPathToConsole(foundedPath);
-                    Console.WriteLine();
-                    Console.WriteLine();
-#endif
                     return foundedPath;
+
                 }
+
                 else
                 {
                     currentHP = tempHP;
-                    return FindWayToQ(start, goal, visitedPlaces, numberOfWalkablePlaces);
+                    return FindPath(start, goal, visitedPlaces, numberOfWalkablePlaces);
                 }
             }
             

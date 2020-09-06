@@ -69,7 +69,9 @@ namespace ConsoleUI
                 Console.WriteLine($"The error is in the {logFolderFullPath}.");
                 MyDebug.WriteExceptionInFile(ex, CommonStuff.projectName, CommonStuff.logFolderName);
             }
+#if !DEBUG
             Console.ReadKey();
+#endif
         }
 
         private static void SetParentFolder()
