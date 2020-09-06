@@ -560,7 +560,10 @@ namespace AlgorithmLibrary
             {
                 IEnumerable<Cell> query = openList.OrderBy(x => x.F);
                 Cell current = query.First();
-                visitedPlaces[current.Point]++;
+                if(!isGoalFounded)
+                {
+                    visitedPlaces[current.Point]++;
+                }
                 openList.Remove(current);
                 closedList.Add(current);
                 Point[] neighbors = map.ReturnNeighbours(current.Point);
@@ -621,6 +624,10 @@ namespace AlgorithmLibrary
                 Console.WriteLine();
 #endif
                 bool isTherePlacesLessMax = false;
+                //foreach(Point point in foundedPath)
+                //{
+                //    visitedPlaces[point]++;
+                //}
 
 #if false
                 foreach (var item in visitedPlaces.Values)
