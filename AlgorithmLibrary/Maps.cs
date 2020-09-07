@@ -252,14 +252,5 @@ namespace AlgorithmLibrary
             }
             return neigbours.ToArray();
         }
-
-        /// <summary>
-        /// Used for debuging a point in the console.
-        /// </summary>
-        /// <param name="point"></param>
-        public void WritePointInConsole(Point point)
-        {
-            Console.WriteLine(point.X + " -" + point.Y);
-        }
     }
 }

@@ -135,6 +135,7 @@ namespace AlgorithmLibrary
 
             else
             {
+                //If there is fire - the character burnt.
                 IsDead = map.IsThereFireOnMap();
 
                 return null;
@@ -160,10 +161,10 @@ namespace AlgorithmLibrary
         }
 
         /// <summary>
-        /// Returns true if dead.
+        /// Check for fire in the path and get damage if found one.
         /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
+        /// <param name="path">A path to pass.</param>
+        /// <returns>Returns true if died in the way.</returns>
         private bool TakeDamageFromPath(Point[] path)
         {
             foreach (Point position in path)
@@ -237,6 +238,10 @@ namespace AlgorithmLibrary
             return IsThereObjectInWay(path, Maps.DOORS);
         }
 
+        /// <summary>
+        /// Restores deleted objects on map.
+        /// </summary>
+        /// <param name="deletedObjects"></param>
         private void RestoreObjects(Dictionary<Point, char> deletedObjects)
         {
             foreach (var item in deletedObjects)
@@ -254,6 +259,7 @@ namespace AlgorithmLibrary
             Point[] shortestWay = null;
             Dictionary<Point, char> deletedObjects = new Dictionary<Point, char>();
 
+            //Example of a combination in string array - {"a", "b", "c"}.
             foreach (string[] combination in combinations)
             {
                 List<string[]> permutationsOfCombination = new List<string[]>();
@@ -265,6 +271,7 @@ namespace AlgorithmLibrary
                     permutationsOfCombination.Add(comb.ToArray());
                 }
 
+                //The combination {"a", "b", "c"} became {"a", "c", "b"}, {"c", "a", "b"} and so on.
                 foreach (string[] aPermutation in permutationsOfCombination)
                 {
                     Point currentPosition = map.S;
@@ -320,6 +327,7 @@ namespace AlgorithmLibrary
                             {
                                 UseMedkit(goal);
                             }
+                            //If founded a key - delete also the door.
                             else if (Maps.KEYS.Contains(tempObject))
                             {
                                 map.DeleteObject(goal);
@@ -332,11 +340,12 @@ namespace AlgorithmLibrary
 
                         }
                     }
-                    if(breakFlag)
+                    //If didn't find the way to the goal - try next permutation.
+                    if(breakFlag || wholePath == null)
                     {
                         continue;
                     }
-                    else if(wholePath != null)
+                    else
                     {
                         Point[] pathToQ = FindPath(currentPosition, map.Q);
                         if (pathToQ == null)
@@ -356,10 +365,6 @@ namespace AlgorithmLibrary
                             }
 
                         }
-                    }
-                    else
-                    {
-                        continue;
                     }
                 }
             }
@@ -466,7 +471,7 @@ namespace AlgorithmLibrary
         /// Uses BreadthFirstSearch algorithm to find all objects on the map.
         /// </summary>
         /// <param name="start">Start point to start the search.</param>
-        /// <returns>Returns dictionary of founded objects by char and point.</returns>
+        /// <returns>Returns dictionary of founded objects by string and point.</returns>
         private Dictionary<string, Point> FindAllObjects(Point start)
         {
             Cell source = new Cell(start, null);
@@ -479,6 +484,7 @@ namespace AlgorithmLibrary
 
             Dictionary<string, Point> result = new Dictionary<string, Point>();
 
+            //If there are medkits keep tracking their quantity.
             int numberOfMedkit = 1;
 
             while (openList.Any())
@@ -526,14 +532,21 @@ namespace AlgorithmLibrary
             return result;
         }
 
+        /// <summary>
+        /// Uses A* algorithm, checking for doors and trying to pass through fire.
+        /// </summary>
+        /// <param name="start">Start point to start searching.</param>
+        /// <param name="goal">Goal of the algorithm</param>
+        /// <returns>Returns shortest way to the goal, else null if there is no way.</returns>
         private Point[] FindPath(Point start, Point goal)
         {
+            //Used for keeping of number of times that character step on a place.
             Dictionary<Point, int> visitedPlaces = new Dictionary<Point, int>();
             int numberOfWalkablePlaces = ScanWalkAbleTerritory(start);
-            return FindPath(start, goal, visitedPlaces, numberOfWalkablePlaces);
+            return FindPath(start, goal, visitedPlaces, in numberOfWalkablePlaces);
         }
 
-        private Point[] FindPath(Point start, Point goal, Dictionary<Point, int> visitedPlaces, int numberOfWalkablePlaces)
+        private Point[] FindPath(Point start, Point goal, Dictionary<Point, int> visitedPlaces, in int numberOfWalkablePlaces)
         {
             Cell source = new Cell() { Parent = null, Point = start };
 
@@ -544,7 +557,6 @@ namespace AlgorithmLibrary
 
             if(!visitedPlaces.Any() || visitedPlaces == null)
             {
-                //Keeps how many times a place has been visited.
                 visitedPlaces = new Dictionary<Point, int>();
 
                 visitedPlaces.Add(source.Point, 0);
@@ -556,6 +568,9 @@ namespace AlgorithmLibrary
 
             bool isGoalFounded = false;
 
+            //Do until empty.
+            //Do after even the goal is founded to fill 
+            //the visitedPlaces for compare with numberOfWalkablePlaces.
             while (openList.Any())
             {
                 IEnumerable<Cell> query = openList.OrderBy(x => x.F);
@@ -566,6 +581,7 @@ namespace AlgorithmLibrary
                 }
                 openList.Remove(current);
                 closedList.Add(current);
+                //Closest places to the point.
                 Point[] neighbors = map.ReturnNeighbours(current.Point);
                 foreach (Point neighbor in neighbors)
                 {
@@ -624,10 +640,6 @@ namespace AlgorithmLibrary
                 Console.WriteLine();
 #endif
                 bool isTherePlacesLessMax = false;
-                //foreach(Point point in foundedPath)
-                //{
-                //    visitedPlaces[point]++;
-                //}
 
 #if false
                 foreach (var item in visitedPlaces.Values)
@@ -637,7 +649,7 @@ namespace AlgorithmLibrary
 #endif
                 foreach (int value in visitedPlaces.Values)
                 {
-                    if (value < MAX_STEPS_PER_PLACE)
+                    if (value != MAX_STEPS_PER_PLACE)
                     {
                         isTherePlacesLessMax = true;
                         break;
@@ -658,6 +670,7 @@ namespace AlgorithmLibrary
 
                 else
                 {
+                    //If died in the founded way - restore HP and try again considering the visited places.
                     currentHP = tempHP;
                     return FindPath(start, goal, visitedPlaces, numberOfWalkablePlaces);
                 }
@@ -707,29 +720,42 @@ namespace AlgorithmLibrary
             return Math.Abs(current.X - goal.X) + Math.Abs(current.Y - goal.Y);
         }
 
+        /// <summary>
+        /// Scan a map for places(points) where the character can step on using BreadthFirstSearch algorithm.
+        /// </summary>
+        /// <param name="start">Start point where the search starts.</param>
+        /// <returns>Returns number of walkable places.</returns>
         private int ScanWalkAbleTerritory(Point start)
         {
             Cell source = new Cell(start, null);
+
+            //Places is going to be visited.
             List<Cell> openList = new List<Cell>()
                 {
                     source,
                 };
 
+            //Visited plases.
             List<Cell> closedList = new List<Cell>();
 
+            //Do until empty.
             while (openList.Any())
             {
                 Cell current = openList.First();
 
                 openList.Remove(current);
                 closedList.Add(current);
+
+                //Closest places to the point.
                 Point[] neighbors = map.ReturnNeighbours(current.Point);
+
                 foreach (Point neighbor in neighbors)
                 {
                     char tempObject = map.ReturnObject(neighbor);
 
                     if (tempObject != '.')
                     {
+                        //If point constains a door - don't include.
                         if (Maps.DOORS.Contains(tempObject))
                         {
                             continue;
@@ -758,6 +784,10 @@ namespace AlgorithmLibrary
 
         #endregion
 
+        /// <summary>
+        /// Show a path to the console.
+        /// </summary>
+        /// <param name="path">A path to show.</param>
         private void ShowPathToConsole(Point[] path)
         {
             int index = 0;

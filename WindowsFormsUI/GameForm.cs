@@ -15,7 +15,9 @@ namespace WindowsFormsUI
         private Maps myMap;
         private Algorithm algorithm;
         private string mapName;
+        //Array for all images on a map.
         private PictureBox[,] pictureBoxes;
+        //Represent rows of a map.
         private MyFlowLayoutPanel[] FlowLayoutPanels;
         private const int SIZE_OF_IMAGE_X = 40;
         private const int SIZE_OF_IMAGE_Y = 40;
@@ -128,11 +130,14 @@ namespace WindowsFormsUI
             AlgorithmLibrary.Point tempPoint = algorithm.Result[0];
             foreach (AlgorithmLibrary.Point point in algorithm.Result)
             {
+                #region Changing previous image
+                //Change image of previous point with image it had.
                 foreach (Control c in FlowLayoutPanels[tempPoint.Y].Controls)
                 {
                     if (c.Name == $"picture{tempPoint.X}")
                     {
                         PictureBox picture = (PictureBox)c;
+                        //When trying to call dispose before uploading new image - get error.
                         picture.Image = (Image)tempPicture.Image.Clone();
                         c.Refresh();
                         break;
@@ -141,9 +146,13 @@ namespace WindowsFormsUI
 
                 pictureBoxes[tempPoint.Y, tempPoint.X] = tempPicture;
 
-                char tempObject = myMap.ReturnObject(point.X, point.Y);
+                #endregion
+
+                # region Deleting current image if not floor
+                char tempObject = myMap.ReturnObject(point);
                 if(tempObject != '.')
                 {
+                    //Replace image of object to image of floor.
                     if (Maps.DOORS.Contains(tempObject) ||
                     Maps.KEYS.Contains(tempObject) ||
                     Maps.MEDKIT == tempObject)
@@ -162,8 +171,15 @@ namespace WindowsFormsUI
                     }
                 }
 
+                #endregion
+
+                //Save current image for recovering it in the next step.
+                //Coping image, not making a link to it!
                 tempPicture = CreateNewPictureBox(pictureBoxes[point.Y, point.X]);
                 tempPoint = point;
+
+
+                #region Changing current picture with doomBoy picture.
 
                 PictureBox doomBoyPicture = CreateNewPictureBox(doomBoy, SIZE_OF_IMAGE_X, SIZE_OF_IMAGE_Y);
                 doomBoyPicture.Margin = new Padding(0);
@@ -181,6 +197,7 @@ namespace WindowsFormsUI
                         break;
                     }
                 }
+                #endregion
 
                 numberOfSteps++;
                 labelSteps.Text = numberOfSteps.ToString();
@@ -198,6 +215,7 @@ namespace WindowsFormsUI
             AlgorithmMap = new Maps(mapName);
             algorithm = new Algorithm(AlgorithmMap);
             myMap = new Maps(mapName);
+
 
             pictureBoxes = new PictureBox[myMap.Map.GetLength(0), myMap.Map.GetLength(1)];
             FlowLayoutPanels = new MyFlowLayoutPanel[myMap.Map.GetLength(0)];

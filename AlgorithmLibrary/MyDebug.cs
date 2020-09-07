@@ -57,7 +57,10 @@ namespace AlgorithmLibrary
             }
         }
 
-
+        /// <summary>
+        /// Used for debuging winForms.
+        /// </summary>
+        /// <param name="_string"></param>
         public static void WriteStringInTheConsole(string _string)
         {
             System.Diagnostics.Trace.WriteLine(_string);
