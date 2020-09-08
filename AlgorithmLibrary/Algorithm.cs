@@ -13,7 +13,9 @@ namespace AlgorithmLibrary
         private const int POINTSRANGE = 1;
         private int currentHP = CommonStuff.MAX_HP;
         private int BASIC_FIRE_DAMAGE = 20;
-        private const int MAX_STEPS_PER_PLACE = 10;
+        private const int MAX_STEPS_PER_PLACE = 5;
+        private delegate Point[] PathFindDelegete(Point start, Point goal, Dictionary<Point, int> visitedPlaces);
+        private PathFindDelegete pathFindDelegete;
         public bool IsDead { get; private set; }
         public Point[] Result { get; private set; }
         public string Directions { get; private set; }
@@ -75,28 +77,14 @@ namespace AlgorithmLibrary
         {
             #region First step
 
-            Point[] firstStep = FindPathSimple(map.S, map.Q);
-            Point[] anotherWayToQ;
-
-            if (firstStep == null)
-            {
-                return null;
-            }
-            else if(!IsThereDoor(firstStep) && !IsThereFire(firstStep))
-            {
-                return firstStep;
-            }
-            else
-            {
-                anotherWayToQ = FindPath(map.S, map.Q);
-            }
+            Point[] firstStep = FindPath(map.S, map.Q);
 
             #endregion
 
             #region Second step            
 
             //Dictionary that keeps all objects from the map.
-            var allObjects = FindAllObjects(map.S);
+            Dictionary<string, Point> allObjects = FindAllObjects(map.S);
 
             //All combinations from allObjects of the map.
             List<string[]> allCombinations = new List<string[]>();
@@ -104,27 +92,32 @@ namespace AlgorithmLibrary
 #if DEBUG
             Console.WriteLine("I've started genereting combinations!");
 #endif
-
-            //Generating all combinations from founded objects.
-            for (int i = allObjects.Count(); i > 0; i--)
+            Point[] resultOfAlgorithm = null;
+            if (allObjects.Any())
             {
-                var resultT = Combinations.FindCombinations(allObjects.Keys, i);
-                foreach (var comb in resultT.ToArray())
+                //Generating all combinations from founded objects.
+                for (int i = allObjects.Count(); i > 0; i--)
                 {
-                    allCombinations.Add(comb.ToArray());
+                    var resultT = Combinations.FindCombinations(allObjects.Keys, i);
+                    foreach (var comb in resultT.ToArray())
+                    {
+                        allCombinations.Add(comb.ToArray());
+                    }
                 }
+
+                resultOfAlgorithm = ReturnShortestPathFromCombinations(allCombinations, allObjects);
             }
 #if DEBUG
             Console.WriteLine("I finished combinations!");
 #endif
 
-            Point[] resultOfAlgorithm = ReturnShortestPathFromCombinations(allCombinations, allObjects);
+            
 
-            if (anotherWayToQ != null && resultOfAlgorithm != null)
+            if (firstStep != null && resultOfAlgorithm != null)
             {
-                if (anotherWayToQ.Count() < resultOfAlgorithm.Count())
+                if (firstStep.Count() < resultOfAlgorithm.Count())
                 {
-                    return anotherWayToQ;
+                    return firstStep;
                 }
                 else
                 {
@@ -136,9 +129,9 @@ namespace AlgorithmLibrary
                 return resultOfAlgorithm;
             }
 
-            else if (anotherWayToQ != null)
+            else if (firstStep != null)
             {
-                return anotherWayToQ;
+                return firstStep;
             }
 
             else
@@ -252,11 +245,14 @@ namespace AlgorithmLibrary
         /// <param name="deletedObjects"></param>
         private void RestoreObjects(Dictionary<Point, char> deletedObjects)
         {
-            foreach (var item in deletedObjects)
+            if(deletedObjects.Any())
             {
-                map.ChangeObject(item.Key, item.Value);
+                foreach (var item in deletedObjects)
+                {
+                    map.ChangeObject(item.Key, item.Value);
+                }
+                deletedObjects.Clear();
             }
-            deletedObjects.Clear();
         }
 
 
@@ -270,10 +266,13 @@ namespace AlgorithmLibrary
             //Example of a combination in string array - {"a", "b", "c"}.
             foreach (string[] combination in combinations)
             {
+#if DEBUG
+                Console.WriteLine("Started permutation of a combination!");
+#endif
                 List<string[]> permutationsOfCombination = new List<string[]>();
                 
                 //Load permutationsOfObjectsName
-                var resultT = Permutations.GetPermutations(combination, combination.Length);
+                var resultT = Permutations.Permute(combination);
                 foreach (var comb in resultT.ToArray())
                 {
                     permutationsOfCombination.Add(comb.ToArray());
@@ -371,7 +370,7 @@ namespace AlgorithmLibrary
         /// <param name="start">The start Point.</param>
         /// <param name="goal">The destiny point.</param>
         /// <returns>The array of Point from which the path is.</returns>
-        private Point[] FindPathSimple(Point start, Point goal)
+        private Point[] FindPathA(Point start, Point goal, Dictionary<Point, int> visitedPlaces)
         {
             Cell source = new Cell() { Parent = null, Point = start };
 
@@ -385,13 +384,25 @@ namespace AlgorithmLibrary
                 IEnumerable<Cell> query = openList.OrderBy(x => x.F);
                 Cell current = query.First();
                 openList.Remove(current);
+                visitedPlaces[current.Point]++;
                 closedList.Add(current);
                 Point[] neighbors = map.ReturnNeighbours(current.Point).ToArray();
                 foreach (Point neighbor in neighbors)
                 {
+                    char tempObject = map.ReturnObject(neighbor);
+                    if (tempObject != '.')
+                    {
+                        if (Maps.DOORS.Contains(tempObject))
+                        {
+                            continue;
+                        }
+                    }
                     Cell newCell = new Cell(neighbor, current.G + POINTSRANGE, ReturnH(neighbor, goal), current);
                     if (newCell.Point.Equals(goal))
+                    {
+                        visitedPlaces[newCell.Point]++;
                         return ReturnPath(newCell);
+                    }
                     if (!closedList.Contains(newCell))
                     {
                         if (openList.Contains(newCell))
@@ -535,11 +546,12 @@ namespace AlgorithmLibrary
         {
             //Used for keeping of number of times that character step on a place.
             Dictionary<Point, int> visitedPlaces = new Dictionary<Point, int>();
-            int numberOfWalkablePlaces = ScanWalkAbleTerritory(start);
-            return FindPath(start, goal, visitedPlaces, in numberOfWalkablePlaces);
+            ScanWalkAbleTerritory(start, visitedPlaces);
+            pathFindDelegete = FindPathA;
+            return FindPath(start, goal, visitedPlaces);
         }
 
-        private Point[] FindPath(Point start, Point goal, Dictionary<Point, int> visitedPlaces, in int numberOfWalkablePlaces)
+        private Point[] FindPathBread(Point start, Point goal, Dictionary<Point, int> visitedPlaces)
         {
             Cell source = new Cell() { Parent = null, Point = start };
 
@@ -547,13 +559,6 @@ namespace AlgorithmLibrary
             {
                 source
             };
-
-            if(!visitedPlaces.Any() || visitedPlaces == null)
-            {
-                visitedPlaces = new Dictionary<Point, int>();
-
-                visitedPlaces.Add(source.Point, 0);
-            }
 
             List<Cell> closedList = new List<Cell>();
 
@@ -566,16 +571,9 @@ namespace AlgorithmLibrary
             //the visitedPlaces for compare with numberOfWalkablePlaces.
             while (openList.Any())
             {
-                IEnumerable<Cell> query = openList.OrderBy(x => x.F);
+                IEnumerable<Cell> query = openList.OrderBy(x => x.G);
                 Cell current = query.First();
-                if(!isGoalFounded)
-                {
-                    visitedPlaces[current.Point] += 2;
-                }
-                else
-                {
-                    visitedPlaces[current.Point]++;
-                }
+                visitedPlaces[current.Point]++;
                 openList.Remove(current);
                 closedList.Add(current);
                 //Closest places to the point.
@@ -591,29 +589,19 @@ namespace AlgorithmLibrary
                         }
                     }
 
-                    if (!visitedPlaces.ContainsKey(neighbor))
-                    {
-                        visitedPlaces.Add(neighbor, 0);
-                    }
-
-                    Cell newCell = new Cell(neighbor, current.G + POINTSRANGE + visitedPlaces[neighbor], ReturnH(neighbor, goal), current);
+                    Cell newCell = new Cell(neighbor, visitedPlaces[neighbor], current);
 
                     if (!isGoalFounded && newCell.Point.Equals(goal))
                     {
                         foundedPath = ReturnPath(newCell);
-                        visitedPlaces[newCell.Point]+=2;
+                        visitedPlaces[newCell.Point]++;
                         isGoalFounded = true;
                     }
                     else if (!closedList.Contains(newCell))
                     {
                         if (openList.Contains(newCell))
                         {
-                            int index = openList.IndexOf(newCell);
-                            if (openList[index].F > newCell.F)
-                            {
-                                openList.RemoveAt(index);
-                                openList.Add(newCell);
-                            }
+                            continue;
                         }
                         else
                         {
@@ -622,7 +610,15 @@ namespace AlgorithmLibrary
                     }
                 }
             }
-            if(foundedPath == null)
+
+            return foundedPath;
+        }
+
+        private Point[] FindPath(Point start, Point goal, Dictionary<Point, int> visitedPlaces)
+        {
+            Point[] foundedPath = pathFindDelegete(start, goal, visitedPlaces);
+
+            if (foundedPath == null)
             {
                 return null;
             }
@@ -668,7 +664,8 @@ namespace AlgorithmLibrary
                 {
                     //If died in the founded way - restore HP and try again considering the visited places.
                     currentHP = tempHP;
-                    return FindPath(start, goal, visitedPlaces, numberOfWalkablePlaces);
+                    pathFindDelegete = FindPathBread;
+                    return FindPath(start, goal, visitedPlaces);
                 }
             }
             
@@ -721,18 +718,20 @@ namespace AlgorithmLibrary
         /// </summary>
         /// <param name="start">Start point where the search starts.</param>
         /// <returns>Returns number of walkable places.</returns>
-        private int ScanWalkAbleTerritory(Point start)
+        private void ScanWalkAbleTerritory(Point start, Dictionary<Point, int> visitedPlaces)
         {
             Cell source = new Cell(start, null);
 
             //Places is going to be visited.
             List<Cell> openList = new List<Cell>()
                 {
-                    source,
+                    source
                 };
 
             //Visited plases.
             List<Cell> closedList = new List<Cell>();
+
+            visitedPlaces.Add(start, 0);
 
             //Do until empty.
             while (openList.Any())
@@ -758,6 +757,11 @@ namespace AlgorithmLibrary
                         }
                     }
 
+                    if (!visitedPlaces.ContainsKey(neighbor))
+                    {
+                        visitedPlaces.Add(neighbor, 0);
+                    }
+
                     Cell newCell = new Cell(neighbor, current);
 
                     if (!closedList.Contains(newCell))
@@ -774,8 +778,6 @@ namespace AlgorithmLibrary
                     }
                 }
             }
-
-            return closedList.Count();
         }
 
         #endregion
