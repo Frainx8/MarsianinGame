@@ -7,6 +7,7 @@ using System.Text;
 namespace AlgorithmLibrary
 {
     public class Algorithm
+    //TODO change findPath using delegates, find out why the program is stops on permutations.
     {
         private Maps map;
         private const int POINTSRANGE = 1;
@@ -100,6 +101,10 @@ namespace AlgorithmLibrary
             //All combinations from allObjects of the map.
             List<string[]> allCombinations = new List<string[]>();
 
+#if DEBUG
+            Console.WriteLine("I've started genereting combinations!");
+#endif
+
             //Generating all combinations from founded objects.
             for (int i = allObjects.Count(); i > 0; i--)
             {
@@ -109,6 +114,9 @@ namespace AlgorithmLibrary
                     allCombinations.Add(comb.ToArray());
                 }
             }
+#if DEBUG
+            Console.WriteLine("I finished combinations!");
+#endif
 
             Point[] resultOfAlgorithm = ReturnShortestPathFromCombinations(allCombinations, allObjects);
 
@@ -270,7 +278,9 @@ namespace AlgorithmLibrary
                 {
                     permutationsOfCombination.Add(comb.ToArray());
                 }
-
+#if DEBUG
+                Console.WriteLine("Finished permutation of a combination!");
+#endif
                 //The combination {"a", "b", "c"} became {"a", "c", "b"}, {"c", "a", "b"} and so on.
                 foreach (string[] aPermutation in permutationsOfCombination)
                 {
@@ -293,24 +303,7 @@ namespace AlgorithmLibrary
                         
                         Point goal = _objectsOfMap[letter];
                         Point[] tempPath = FindPath(currentPosition, goal);
-#if false
-                        string[] example = { "b", "H1", "a" };
-                        bool Res()
-                        {
-                            if (aPermutation.Length != 3)
-                                return false;
-                            for (int i = 0; i < 3; i++)
-                            {
-                                if (example[i] != aPermutation[i])
-                                    return false;
-                            }
-                            return true;
-                        }
-                        if (Res())
-                        {
-                            ShowPathToConsole(tempPath.ToArray());
-                        }
-#endif
+
                         if (tempPath == null)
                         {
                             breakFlag = true;
@@ -577,6 +570,10 @@ namespace AlgorithmLibrary
                 Cell current = query.First();
                 if(!isGoalFounded)
                 {
+                    visitedPlaces[current.Point] += 2;
+                }
+                else
+                {
                     visitedPlaces[current.Point]++;
                 }
                 openList.Remove(current);
@@ -604,7 +601,7 @@ namespace AlgorithmLibrary
                     if (!isGoalFounded && newCell.Point.Equals(goal))
                     {
                         foundedPath = ReturnPath(newCell);
-                        visitedPlaces[newCell.Point]++;
+                        visitedPlaces[newCell.Point]+=2;
                         isGoalFounded = true;
                     }
                     else if (!closedList.Contains(newCell))
@@ -632,8 +629,7 @@ namespace AlgorithmLibrary
             else
             {
 #if false
-                //Console.WriteLine($"Visited places {visitedPlaces.Count}");
-                //Console.WriteLine($"Number Of Walkable Places {numberOfWalkablePlaces}");
+               
                 Console.WriteLine($"HP - {currentHP}");
                 Console.WriteLine($"Points - {foundedPath.Count()}");
                 ShowPathToConsole(foundedPath);
@@ -649,7 +645,7 @@ namespace AlgorithmLibrary
 #endif
                 foreach (int value in visitedPlaces.Values)
                 {
-                    if (value != MAX_STEPS_PER_PLACE)
+                    if (value <= MAX_STEPS_PER_PLACE)
                     {
                         isTherePlacesLessMax = true;
                         break;

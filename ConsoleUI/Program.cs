@@ -177,6 +177,7 @@ namespace ConsoleUI
             {
                 mapName = $@"{mapsFolder}\{ CommonStuff.mapNameDefaultName}";
             }
+            //TODO make copy of the map not read it again.
             AlgorithmMap = new Maps(mapName);
             myMap = new Maps(mapName);
             algorithm = new Algorithm(AlgorithmMap);

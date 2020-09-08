@@ -78,6 +78,9 @@ namespace AlgorithmLibrary
         {
             if (File.Exists(nameOfMap))
             {
+#if DEBUG
+                Console.WriteLine("I've started read the map!");
+#endif
                 char[,] map; // Создаю двумерный массив карты, где будут лежать все игровые объекты
                 using (StreamReader myFile = new StreamReader(nameOfMap))
                 {
@@ -126,7 +129,11 @@ namespace AlgorithmLibrary
                         
                     }
                 }
-                
+
+#if DEBUG
+                Console.WriteLine("I've finished read the map!");
+#endif
+
                 return map;
             }
             else
