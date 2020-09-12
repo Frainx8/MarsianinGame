@@ -16,6 +16,7 @@ namespace AlgorithmLibrary
         private const int MAX_STEPS_PER_PLACE = 5;
         private delegate Point[] PathFindDelegete(Point start, Point goal, Dictionary<Point, int> visitedPlaces);
         private PathFindDelegete pathFindDelegete;
+        private Dictionary<string, Point> allFoundedObjectsOnMap;
         public bool IsDead { get; private set; }
         public Point[] Result { get; private set; }
         public string Directions { get; private set; }
@@ -84,49 +85,49 @@ namespace AlgorithmLibrary
             #region Second step            
 
             //Dictionary that keeps all objects from the map.
-            Dictionary<string, Point> allObjects = FindAllObjects(map.S);
+            allFoundedObjectsOnMap = FindAllObjects(map.S);
 
-            //All combinations from allObjects of the map.
+            //All combinations from allFoundedObjectsOnMap of the map.
             List<string[]> allCombinations = new List<string[]>();
 
-#if DEBUG
+#if false
             Console.WriteLine("I've started genereting combinations!");
 #endif
-            Point[] resultOfAlgorithm = null;
-            if (allObjects.Any())
+            Point[] shortestWayOfAlgorithm = null;
+            if (allFoundedObjectsOnMap.Any())
             {
                 //Generating all combinations from founded objects.
-                for (int i = allObjects.Count(); i > 0; i--)
+                for (int i = allFoundedObjectsOnMap.Count(); i > 0; i--)
                 {
-                    var resultT = Combinations.FindCombinations(allObjects.Keys, i);
-                    foreach (var comb in resultT.ToArray())
+                    var resultT = Combinations.FindCombinations(allFoundedObjectsOnMap.Keys, i);
+                    foreach (var comb in resultT.ToList())
                     {
                         allCombinations.Add(comb.ToArray());
                     }
                 }
-
-                resultOfAlgorithm = ReturnShortestPathFromCombinations(allCombinations, allObjects);
+                Console.WriteLine(true);
+                shortestWayOfAlgorithm = ReturnShortestPathFromCombinations(allCombinations);
             }
-#if DEBUG
+#if false
             Console.WriteLine("I finished combinations!");
 #endif
 
             
 
-            if (firstStep != null && resultOfAlgorithm != null)
+            if (firstStep != null && shortestWayOfAlgorithm != null)
             {
-                if (firstStep.Count() < resultOfAlgorithm.Count())
+                if (firstStep.Count() < shortestWayOfAlgorithm.Count())
                 {
                     return firstStep;
                 }
                 else
                 {
-                    return resultOfAlgorithm;
+                    return shortestWayOfAlgorithm;
                 }
             }
-            else if (resultOfAlgorithm != null)
+            else if (shortestWayOfAlgorithm != null)
             {
-                return resultOfAlgorithm;
+                return shortestWayOfAlgorithm;
             }
 
             else if (firstStep != null)
@@ -243,123 +244,312 @@ namespace AlgorithmLibrary
         /// Restores deleted objects on map.
         /// </summary>
         /// <param name="deletedObjects"></param>
-        private void RestoreObjects(Dictionary<Point, char> deletedObjects)
+
+        private void RestoreDeletedObjects(Dictionary<Point, char> deletedObjectsmy)
         {
-            if(deletedObjects.Any())
+            if(deletedObjectsmy.Any())
             {
-                foreach (var item in deletedObjects)
+                foreach (var item in deletedObjectsmy)
                 {
                     map.ChangeObject(item.Key, item.Value);
                 }
-                deletedObjects.Clear();
+                deletedObjectsmy.Clear();
             }
         }
 
+        private Point[] ChangeShortestWay(Point[] newWay, Point[] oldWay)
+        {
+            if (oldWay == null || newWay != null && newWay.Length < oldWay.Length)
+            {
+                return newWay;
+            }
+            else
+            {
+                return oldWay;
+            }
+        }
+
+        private Point[] TryCombinePathsToObjects(string[] combination, List<Point[]> differentWays)
+        {
+#if false
+            foreach (var _string in combination)
+            {
+                Console.Write(" " + _string);
+            }
+            Console.WriteLine();
+#endif
+            Point[] shortestWay = null;
+            for (int i = 0; i < combination.Length; i++)
+            {
+                Point currentPosition = map.S;
+                currentHP = CommonStuff.MAX_HP;
+                Dictionary<Point, char> deletedObjectsThisStep = new Dictionary<Point, char>();
+                Dictionary<Point, char> deletedObjectsWholeWay = new Dictionary<Point, char>();
+                List<Point> wholePath = new List<Point>();
+
+                Point[] tempPath = ReturnPathFromTwoObject(currentPosition, allFoundedObjectsOnMap[combination[i]], deletedObjectsThisStep, deletedObjectsWholeWay);
+#if false
+                Console.WriteLine($"From S to {combination[i]} - " + tempPath.Count());
+#endif
+                if (tempPath != null)
+                {
+                    wholePath.AddRange(tempPath);
+                    wholePath.Remove(wholePath.Last());
+
+                    string newCombination = combination[i];
+
+
+                    List<string> otherObjects = new List<string>(combination);
+                    otherObjects.Remove(combination[i]);
+
+#if false
+                    if (newCombination == "a")
+                    {
+                        Console.Write("New combo " + newCombination);
+                        foreach (var _string in otherObjects)
+                        {
+                            Console.Write(" " + _string);
+                        }
+                        Console.WriteLine();
+                        Console.WriteLine();
+                        Console.WriteLine();
+                        Console.WriteLine();
+                    }
+#endif
+                    Point[] copyOfWholePath = wholePath.ToArray();
+
+                    TryCombinePathsToObjects(newCombination, otherObjects.ToArray(), wholePath, differentWays, deletedObjectsWholeWay);
+
+                    wholePath = new List<Point>(copyOfWholePath);
+
+                    RestoreDeletedObjects(deletedObjectsThisStep);
+
+                }
+                else
+                {
+                    RestoreDeletedObjects(deletedObjectsThisStep);
+                }
+            }
+            foreach(Point[] path in differentWays)
+            {
+                shortestWay = ChangeShortestWay(path, shortestWay);
+            }
+            return shortestWay;
+        }
+
+        private void TryCombinePathsToObjects(string combination, string[] oldOtherObjects, List<Point> wholePath,
+            List<Point[]> differentWays, Dictionary<Point, char> deletedObjectsWholeWay)
+        {
+#if false
+            Console.Write("current comb " + combination + " and old comb");
+            foreach (var _string in oldOtherObjects)
+            {
+                Console.Write(" " + _string);
+            }
+            Console.WriteLine();
+#endif
+            if (oldOtherObjects.Any())
+            {
+                Point[] copyOfWholePath = wholePath.ToArray();
+                for (int i = 0; i < oldOtherObjects.Length; i++)
+                {
+                    Point currentPosition = allFoundedObjectsOnMap[combination];
+                    Dictionary<Point, char> deletedObjectsThisStep = new Dictionary<Point, char>();
+                    Dictionary<Point, char> copyOfdeletedObjectsWholeWay = deletedObjectsWholeWay.ToDictionary(entry => entry.Key,
+                       entry => entry.Value);
+                    Point[] tempPath = ReturnPathFromTwoObject(currentPosition, 
+                        allFoundedObjectsOnMap[oldOtherObjects[i]], deletedObjectsThisStep, deletedObjectsWholeWay);
+#if false
+                    if (tempPath != null)
+                    {
+                        Console.WriteLine("tempPAth - " + tempPath.Length);
+                    }
+#endif
+#if false
+                    if (oldOtherObjects != null && tempPath != null)
+                        Console.WriteLine($"From {combination} to" +
+                            $" {oldOtherObjects[i]} - " + tempPath.Count());
+#endif
+                    if (tempPath != null)
+                    {
+#if false
+                        Console.WriteLine("Before" + wholePath.Count());
+#endif
+                        wholePath.AddRange(tempPath);
+                        wholePath.Remove(wholePath.Last());
+
+#if false
+                        Console.WriteLine("after" + wholePath.Count());
+#endif
+
+                        string newCombination = oldOtherObjects[i];
+
+                        List<string> newOtherObjects = new List<string>(oldOtherObjects);
+                        newOtherObjects.Remove(oldOtherObjects[i]);
+
+
+                        
+
+#if false
+                        Console.Write("new comb " + newCombination + " and");
+                        foreach (var _string in newOtherObjects)
+                        {
+                            Console.Write(" " + _string);
+                        }
+                        Console.WriteLine();
+#endif
+                        TryCombinePathsToObjects(newCombination, newOtherObjects.ToArray(), wholePath, differentWays, deletedObjectsWholeWay);
+
+#if false
+                        Console.WriteLine("Original"+ wholePath.Count());
+                        Console.WriteLine("Copy" + copyOfWholePath.Count());
+#endif
+                        wholePath = new List<Point>(copyOfWholePath);
+
+                        Dictionary<Point, char> secondCopyOfdeletedObjectsWholeWay = deletedObjectsWholeWay.ToDictionary(entry => entry.Key,
+                                               entry => entry.Value);
+
+#if false
+                        Console.WriteLine("Copy");
+                        foreach (var _string in copyOfdeletedObjectsWholeWay)
+                        {
+
+                            Console.Write(_string.Value + " " + _string.Key + "; ");
+                        }
+                        Console.WriteLine();
+#endif
+#if false
+                        Console.WriteLine("Original");
+                        foreach (var _string in deletedObjectsWholeWay)
+                        {
+                            Console.Write(_string.Value + " " + _string.Key + "; ");
+                        }
+                        Console.WriteLine();
+#endif
+
+                        foreach (Point item in secondCopyOfdeletedObjectsWholeWay.Keys)
+                        {
+                            var itemsToRemove = copyOfdeletedObjectsWholeWay.Where(f => f.Key.Equals(item)).ToArray();
+                            foreach (var item2 in itemsToRemove)
+                                secondCopyOfdeletedObjectsWholeWay.Remove(item2.Key);
+
+                        }
+
+                        foreach (Point item in deletedObjectsWholeWay.Keys)
+                        {
+                            var itemsToRemove = secondCopyOfdeletedObjectsWholeWay.Where(f => f.Key.Equals(item)).ToArray();
+                            foreach (var item2 in itemsToRemove)
+                                deletedObjectsWholeWay.Remove(item2.Key);
+
+                        }
+
+#if false
+                        foreach (var _string in secondCopyOfdeletedObjectsWholeWay)
+                        {
+                            Console.Write(_string.Value + " " + _string.Key + "; ");
+                        }
+                        Console.WriteLine();
+#endif
+
+                        RestoreDeletedObjects(secondCopyOfdeletedObjectsWholeWay);
+
+
+                    }
+                    else
+                    {
+                        RestoreDeletedObjects(deletedObjectsThisStep);
+                    }
+                }
+            }
+            else
+            {
+                Point[] wayToQ = TryFindWayToQ(allFoundedObjectsOnMap[combination]);
+                if (wayToQ != null)
+                {
+
+                    wholePath.AddRange(wayToQ);
+#if false
+                    Console.WriteLine("Way To q - " + wayToQ.Length);
+                    Console.WriteLine(wholePath.Count());
+#endif
+                    differentWays.Add(wholePath.ToArray());
+                }
+            }
+        }
+
+        private Point[] TryFindWayToQ(Point currentPosition)
+        {
+            Point[] pathToQ = FindPath(currentPosition, map.Q);
+            if (pathToQ == null)
+            {
+                return null;
+            }
+            else
+            {
+                return pathToQ;
+            }
+        }
+        private Point[] ReturnPathFromTwoObject(Point firstObject, Point secondObject,
+            Dictionary<Point, char> deletedObjectsThisStep, Dictionary<Point, char> deletedObjectsWholeWay)
+        {
+            Point[] tempPath = FindPath(firstObject, secondObject);
+
+            if (tempPath == null)
+            {
+                return null;
+            }
+            else
+            {
+                char tempObject = map.ReturnObject(secondObject);
+
+                if (Maps.MEDKIT == tempObject)
+                {
+                    UseMedkit(secondObject);
+                }
+                //If founded a key - delete also the door.
+                else if (Maps.KEYS.Contains(tempObject))
+                {
+                    map.DeleteObject(secondObject);
+                    char door = Char.ToUpper(tempObject);
+                    Point doorPosition = map.ReturnAnElementPositionOnMap(door);
+                    map.DeleteObject(doorPosition);
+                    //deletedObjects.Add(doorPosition, door);
+                    deletedObjectsThisStep.Add(doorPosition, door);
+                    deletedObjectsWholeWay.Add(doorPosition, door);
+                }
+                deletedObjectsThisStep.Add(secondObject, tempObject);
+
+                deletedObjectsWholeWay.Add(secondObject, tempObject);
+                //deletedObjects.Add(secondObject, tempObject);
+
+
+                return tempPath;
+            }
+        }
 
         #region Pathfinding algorithms
-        private Point[] ReturnShortestPathFromCombinations(IList<string[]> combinations, Dictionary<string, Point> _objectsOfMap)
+        private Point[] ReturnShortestPathFromCombinations(IList<string[]> combinations)
         {
-            int minNumberOfSteps = Int32.MaxValue;
             Point[] shortestWay = null;
-            Dictionary<Point, char> deletedObjects = new Dictionary<Point, char>();
+            List<Point[]> differentWays = new List<Point[]>();
 
             //Example of a combination in string array - {"a", "b", "c"}.
             foreach (string[] combination in combinations)
             {
-#if DEBUG
-                Console.WriteLine("Started permutation of a combination!");
-#endif
-                List<string[]> permutationsOfCombination = new List<string[]>();
-                
-                //Load permutationsOfObjectsName
-                var resultT = Permutations.Permute(combination);
-                foreach (var comb in resultT.ToArray())
-                {
-                    permutationsOfCombination.Add(comb.ToArray());
-                }
-#if DEBUG
-                Console.WriteLine("Finished permutation of a combination!");
-#endif
-                //The combination {"a", "b", "c"} became {"a", "c", "b"}, {"c", "a", "b"} and so on.
-                foreach (string[] aPermutation in permutationsOfCombination)
-                {
-                    Point currentPosition = map.S;
-                    currentHP = CommonStuff.MAX_HP;
-                    RestoreObjects(deletedObjects);
-                    List<Point> wholePath = new List<Point>();
-
 #if false
-                    foreach (string letter in aPermutation)
-                        Console.Write(letter);
-                    Console.WriteLine();
-#endif
-
-
-
-                    bool breakFlag = false;
-                    foreach (string letter in aPermutation)
-                    {
-                        
-                        Point goal = _objectsOfMap[letter];
-                        Point[] tempPath = FindPath(currentPosition, goal);
-
-                        if (tempPath == null)
-                        {
-                            breakFlag = true;
-                            break;
-                        }
-                        else
-                        {
-                            currentPosition = goal;
-                            char tempObject = map.ReturnObject(goal);
-                            wholePath.AddRange(tempPath);
-                            wholePath.Remove(wholePath.Last());
-
-                            if (Maps.MEDKIT == tempObject)
-                            {
-                                UseMedkit(goal);
-                            }
-                            //If founded a key - delete also the door.
-                            else if (Maps.KEYS.Contains(tempObject))
-                            {
-                                map.DeleteObject(goal);
-                                char door = Char.ToUpper(tempObject);
-                                Point doorPosition = map.ReturnAnElementPositionOnMap(door);
-                                map.DeleteObject(doorPosition);
-                                deletedObjects.Add(doorPosition, door);
-                            }
-                            deletedObjects.Add(goal, tempObject);
-
-                        }
-                    }
-                    //If didn't find the way to the goal - try next permutation.
-                    if(breakFlag || wholePath == null)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        Point[] pathToQ = FindPath(currentPosition, map.Q);
-                        if (pathToQ == null)
-                        {
-                            continue;
-                        }
-                        else
-                        {
-
-                            wholePath.AddRange(pathToQ);
-
-                            if (wholePath.Count < minNumberOfSteps)
-                            {
-
-                                minNumberOfSteps = wholePath.Count;
-                                shortestWay = wholePath.ToArray();
-                            }
-
-                        }
-                    }
+                foreach (var item in combination)
+                {
+                    Console.Write(item);
                 }
+                Console.WriteLine();
+#endif
+                Point[] tempShortestWay = TryCombinePathsToObjects(combination, differentWays);
+
+                shortestWay = ChangeShortestWay(tempShortestWay, shortestWay);
+
             }
+
+
 
             return shortestWay;
         }
