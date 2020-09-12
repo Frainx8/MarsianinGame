@@ -213,8 +213,9 @@ namespace WindowsFormsUI
         private void LoadMap()
         {
             AlgorithmMap = new Maps(mapName);
+            myMap = new Maps(AlgorithmMap);
             algorithm = new Algorithm(AlgorithmMap);
-            myMap = new Maps(mapName);
+
 
 
             pictureBoxes = new PictureBox[myMap.Map.GetLength(0), myMap.Map.GetLength(1)];

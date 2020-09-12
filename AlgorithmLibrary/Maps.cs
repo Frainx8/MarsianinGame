@@ -34,6 +34,27 @@ namespace AlgorithmLibrary
             }
         }
 
+        public Maps(Maps anotherMap)
+        {
+            Map = CopyMap(anotherMap);
+
+            Q = anotherMap.Q;
+            S = anotherMap.S;
+        }
+
+        private char[,] CopyMap(Maps anotherMap)
+        {
+            char[,] newMap = new char[anotherMap.Map.GetLength(0), anotherMap.Map.GetLength(1)];
+            for (int y = 0; y < anotherMap.Map.GetLength(0); y++)
+            {
+                for (int x = 0; x < anotherMap.Map.GetLength(1); x++)
+                {
+                    newMap[y, x] = anotherMap.Map[y, x];
+                }
+            }
+            return newMap;
+        }
+
 
         /// <summary>
         /// Returns contained object in the point.
@@ -78,7 +99,7 @@ namespace AlgorithmLibrary
         {
             if (File.Exists(nameOfMap))
             {
-#if DEBUG
+#if false
                 Console.WriteLine("I've started read the map!");
 #endif
                 char[,] map; // Создаю двумерный массив карты, где будут лежать все игровые объекты
@@ -130,7 +151,7 @@ namespace AlgorithmLibrary
                     }
                 }
 
-#if DEBUG
+#if false
                 Console.WriteLine("I've finished read the map!");
 #endif
 

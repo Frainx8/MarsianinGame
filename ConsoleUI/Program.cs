@@ -179,7 +179,7 @@ namespace ConsoleUI
             }
             //TODO make copy of the map not read it again.
             AlgorithmMap = new Maps(mapName);
-            myMap = new Maps(mapName);
+            myMap = new Maps(AlgorithmMap);
             algorithm = new Algorithm(AlgorithmMap);
         }
         private static void ShowAlgorithmResult()
