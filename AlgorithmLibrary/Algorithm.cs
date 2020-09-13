@@ -533,7 +533,7 @@ namespace AlgorithmLibrary
 
                var severalCombinations = Combinations.MyCombinations(allFoundedObjectsOnMap, i);
                 //Example of a combination in string array - {"a", "b", "c"}.
-                Parallel.ForEach(severalCombinations, (combination) =>
+                foreach(Point[] combination in severalCombinations) 
               {
 #if false
                 foreach (var item in combination)
@@ -548,10 +548,11 @@ namespace AlgorithmLibrary
 
                   shortestWay = ChangeShortestWay(tempShortestWay, shortestWay);
 
-              });
+              }
 
            });
             stopwatch.Stop();
+            //8.31
             TimeSpan ts = stopwatch.Elapsed;
 
             // Format and display the TimeSpan value.
