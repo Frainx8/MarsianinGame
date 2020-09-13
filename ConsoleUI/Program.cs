@@ -223,7 +223,7 @@ namespace ConsoleUI
             {
                 return;
             }
-            else if (Maps.KEYS.Contains(tempObject) || Maps.DOORS.Contains(tempObject))
+            else if (myMap.Keys.Contains(tempObject) || myMap.Doors.Contains(tempObject))
             {
                 myMap.DeleteObject(point);
             }
@@ -231,7 +231,7 @@ namespace ConsoleUI
             {
                 UseMedkit(point);
             }
-            else if (Maps.FIRE_POWER.Contains(tempObject))
+            else if (myMap.FirePower.Contains(tempObject))
             {
                 int firePower = (int)Char.GetNumericValue(tempObject);
                 GetDamage(firePower);

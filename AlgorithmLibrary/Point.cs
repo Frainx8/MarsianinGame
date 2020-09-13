@@ -13,6 +13,11 @@ namespace AlgorithmLibrary
             X,
             Y
         }
+        /// <summary>
+        /// Creates point with X and Y.
+        /// </summary>
+        /// <param name="x">X</param>
+        /// <param name="y">Y</param>
         public Point(int x, int y)
         {
             X = x;

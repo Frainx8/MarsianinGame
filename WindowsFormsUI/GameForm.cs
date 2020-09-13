@@ -153,8 +153,8 @@ namespace WindowsFormsUI
                 if(tempObject != '.')
                 {
                     //Replace image of object to image of floor.
-                    if (Maps.DOORS.Contains(tempObject) ||
-                    Maps.KEYS.Contains(tempObject) ||
+                    if (myMap.Doors.Contains(tempObject) ||
+                    myMap.Keys.Contains(tempObject) ||
                     Maps.MEDKIT == tempObject)
                     {
                         if (Maps.MEDKIT == tempObject)
@@ -164,7 +164,7 @@ namespace WindowsFormsUI
                         PictureBox floorPicture = CreateNewPictureBox(floor, SIZE_OF_IMAGE_X, SIZE_OF_IMAGE_Y);
                         pictureBoxes[point.Y, point.X] = floorPicture;
                     }
-                    else if (Maps.FIRE_POWER.Contains(tempObject))
+                    else if (myMap.FirePower.Contains(tempObject))
                     {
                         int firePower = (int)Char.GetNumericValue(tempObject);
                         GetDamage(firePower);

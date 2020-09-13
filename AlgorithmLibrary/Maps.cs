@@ -11,19 +11,22 @@ namespace AlgorithmLibrary
     /// <remarks>Use WritePointInConsole for debugging</remarks>
     public class Maps
     {
-        public static readonly char[] DOORS = { 'A', 'B', 'C', 'E', 'D' };
-        public static readonly char[] KEYS = { 'a', 'b', 'c', 'e', 'd' };
-        public static readonly char[] FIRE_POWER = { '1', '2', '3', '4', '5' };
+        private static readonly char[] DOORS = { 'A', 'B', 'C', 'E', 'D' };
+        private static readonly char[] KEYS = { 'a', 'b', 'c', 'e', 'd' };
+        private static readonly char[] FIRE_POWER = { '1', '2', '3', '4', '5' };
         public const char MEDKIT = 'H';
         public Point Q { get; private set; }
         public Point S { get; private set; }
+        public char[] Doors { get; private set; }
+        public char[] FirePower { get; private set; }
+        public char[] Keys { get; private set; }
         public char[,] Map { get; private set; }
+        public bool IsThereFire { get; private set; }
 
         public Maps(string nameOfMap)
         {
             Map = ReadTxt(nameOfMap);
-            Q = ReturnAnElementPositionOnMap('Q');
-            S = ReturnAnElementPositionOnMap('S');
+            ScanMap();
             if (Q.Equals(Point.nullPoint))
             {
                 throw new System.ArgumentException("There is no exit!", "Map");
@@ -38,6 +41,10 @@ namespace AlgorithmLibrary
         {
             Map = CopyMap(anotherMap);
 
+            IsThereFire = anotherMap.IsThereFire;
+            Doors = anotherMap.Doors;
+            FirePower = anotherMap.FirePower;
+            Keys = anotherMap.Keys;
             Q = anotherMap.Q;
             S = anotherMap.S;
         }
@@ -183,32 +190,50 @@ namespace AlgorithmLibrary
             return Point.nullPoint;
         }
 
-        /// <summary>
-        /// Returns all founded elements in the map.
-        /// </summary>
-        /// <param name="element"></param>
-        /// <returns>Return an array of positions of the elements.</returns>
-        public Point[] ReturnElementsPositionsOnMap(char element)
+        public void ScanMap()
         {
-  
-            List<Point> result = new List<Point>();
+            List<char> Doors = new List<char>();
+            List<char> Keys = new List<char>();
+            List<char> FirePower = new List<char>();
             for (int y = 0; y < Map.GetLength(0); y++)
             {
                 for (int x = 0; x < Map.GetLength(1); x++)
                 {
-                    if (Map[y, x] == element)
+                    char tempObject = Map[y, x];
+                    if (tempObject == '.')
                     {
-                        result.Add(new Point(x, y));
+                        continue;
                     }
+                    else if(DOORS.Contains(tempObject))
+                    {
+                        Doors.Add(tempObject);
+                    }
+                    else if (KEYS.Contains(tempObject))
+                    {
+                        Keys.Add(tempObject);
+                    }
+                    else if(FIRE_POWER.Contains(tempObject))
+                    {
+                        IsThereFire = true;
+                        if(!FirePower.Contains(tempObject))
+                        {
+                            FirePower.Add(tempObject);
+                        }
+                    } else if(tempObject == 'Q')
+                    {
+                        Q = new Point(x,y);
+                    }
+                    else if (tempObject == 'S')
+                    {
+                        S = new Point(x, y);
+                    }
+
                 }
             }
+            this.FirePower = FirePower.ToArray();
+            this.Doors = Doors.ToArray();
+            this.Keys = Keys.ToArray();
 
-            if(result.Any() == true)
-            {
-                return result.ToArray();
-            }
-            else
-                return null;
         }
 
         /// <summary>
@@ -228,17 +253,6 @@ namespace AlgorithmLibrary
             }
         }
 
-        public bool IsThereFireOnMap()
-        {
-            for(int i = 1; i < 6; i++)
-            {
-                if (!ReturnAnElementPositionOnMap((char)i).Equals(Point.nullPoint))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
 
         /// <summary>
         /// Returns the nearest neigbors of the point.

@@ -125,7 +125,7 @@ namespace AlgorithmLibrary
             else
             {
                 //If there is fire - the character burnt.
-                IsDead = map.IsThereFireOnMap();
+                IsDead = map.IsThereFire;
 
                 return null;
             }
@@ -164,7 +164,7 @@ namespace AlgorithmLibrary
                 char tempObject = map.ReturnObject(position);
                 if (tempObject == '.')
                     continue;
-                else if (Maps.FIRE_POWER.Contains(tempObject))
+                else if (map.FirePower.Contains(tempObject))
                 {
 #if false
                     Console.WriteLine("Hurt!");
@@ -214,7 +214,7 @@ namespace AlgorithmLibrary
         /// <returns>True if found fire, else false.</returns>
         private bool IsThereFire(Point[] path)
         {
-            return IsThereObjectInWay(path, Maps.FIRE_POWER);
+            return IsThereObjectInWay(path, map.FirePower);
         }
 
         /// <summary>
@@ -224,7 +224,7 @@ namespace AlgorithmLibrary
         /// <returns>True if found a door, else false.</returns>
         private bool IsThereDoor(Point[] path)
         {
-            return IsThereObjectInWay(path, Maps.DOORS);
+            return IsThereObjectInWay(path, map.Doors);
         }
 
         /// <summary>
@@ -494,7 +494,7 @@ namespace AlgorithmLibrary
                     UseMedkit(secondObject);
                 }
                 //If founded a key - delete also the door.
-                else if (Maps.KEYS.Contains(tempObject))
+                else if (map.Keys.Contains(tempObject))
                 {
                     map.DeleteObject(secondObject);
                     char door = Char.ToUpper(tempObject);
@@ -576,7 +576,7 @@ namespace AlgorithmLibrary
                     char tempObject = map.ReturnObject(neighbor);
                     if (tempObject != '.')
                     {
-                        if (Maps.DOORS.Contains(tempObject))
+                        if (map.Doors.Contains(tempObject))
                         {
                             continue;
                         }
@@ -680,7 +680,7 @@ namespace AlgorithmLibrary
                 
                 if(tempObject != '.' )
                 {
-                    if(Maps.KEYS.Contains(tempObject) || Maps.MEDKIT == tempObject)
+                    if(map.Keys.Contains(tempObject) || Maps.MEDKIT == tempObject)
                         result.Add(current.Point);
 
                 }
@@ -757,7 +757,7 @@ namespace AlgorithmLibrary
                     char tempObject = map.ReturnObject(neighbor);
                     if (tempObject != '.')
                     {
-                        if (Maps.DOORS.Contains(tempObject))
+                        if (map.Doors.Contains(tempObject))
                         {
                             continue;
                         }
@@ -925,7 +925,7 @@ namespace AlgorithmLibrary
                     if (tempObject != '.')
                     {
                         //If point constains a door - don't include.
-                        if (Maps.DOORS.Contains(tempObject))
+                        if (map.Doors.Contains(tempObject))
                         {
                             continue;
                         }
