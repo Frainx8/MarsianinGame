@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -88,7 +89,6 @@ namespace AlgorithmLibrary
 
             //All combinations from allFoundedObjectsOnMap of the map.
             List<Point[]> allCombinations = new List<Point[]>();
-            List<Point[]> myAllCombination = new List<Point[]>();
 
 #if false
             Console.WriteLine("I've started genereting combinations!");
@@ -99,21 +99,14 @@ namespace AlgorithmLibrary
                 //Generating all combinations from founded objects.
                 for (int i = allFoundedObjectsOnMap.Count(); i > 0; i--)
                 {
-                    var resultT = Combinations.GetCombinations(allFoundedObjectsOnMap, i);
+                    var resultT = Combinations.MyCombinations(allFoundedObjectsOnMap, i);
                     foreach (var comb in resultT)
                     {
                         allCombinations.Add(comb.ToArray());
                     }
                 }
-                //for (int i = allFoundedObjectsOnMap.Count(); i > 0; i--)
-                //{
-                //    var resultT = Combinations.MyCombinations(allFoundedObjectsOnMap, i);
-                //    foreach (var item in resultT)
-                //    {
-                //        myAllCombination.Add(item);
-                //    }
-                //}
                 
+
 #if false
                 foreach (var item in allCombinations)
                 {
@@ -123,16 +116,16 @@ namespace AlgorithmLibrary
                     }
                     Console.WriteLine();
                 }
-                Console.WriteLine();
-                Console.WriteLine();
-                foreach (var item in myAllCombination)
-                {
-                    foreach (Point point in item)
-                    {
-                        Console.Write(point + "; ");
-                    }
-                    Console.WriteLine();
-                }
+                //Console.WriteLine();
+                //Console.WriteLine();
+                //foreach (var item in myAllCombination)
+                //{
+                //    foreach (Point point in item)
+                //    {
+                //        Console.Write(point + "; ");
+                //    }
+                //    Console.WriteLine();
+                //}
 #endif
                 shortestWayOfAlgorithm = ReturnShortestPathFromCombinations(allCombinations);
             }

@@ -43,19 +43,29 @@ namespace AlgorithmLibrary
                 Console.WriteLine();
             }
             Console.WriteLine();
-            Console.WriteLine();
 #endif
 
             Point[][] _result = new Point[result.Count()][];
-            for (int i = 0; i < result.Count(); i++)
+            for (int i = 0; i < _result.Length; i++)
             {
+                _result[i] = new Point[len];
                 for (int j = 0; j < len; j++)
                 {
-                    _result[i] = new Point[len];
                     _result[i][j] = result[i][j];
-
                 }
             }
+
+#if false
+            foreach (var item in _result)
+            {
+                foreach (Point point in item)
+                {
+                    Console.Write(point + "; ");
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine();
+#endif
             return _result;
         }
 
