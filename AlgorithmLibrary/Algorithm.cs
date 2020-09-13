@@ -540,15 +540,17 @@ namespace AlgorithmLibrary
                     map.DeleteObject(secondObject);
                     char door = Char.ToUpper(tempObject);
                     Point doorPosition = map.ReturnAnElementPositionOnMap(door);
-                    map.DeleteObject(doorPosition);
-                    //deletedObjects.Add(doorPosition, door);
-                    deletedObjectsThisStep.Add(doorPosition, door);
-                    deletedObjectsWholeWay.Add(doorPosition, door);
+                    if(doorPosition != Point.nullPoint)
+                    {
+                        map.DeleteObject(doorPosition);
+                        deletedObjectsThisStep.Add(doorPosition, door);
+                        deletedObjectsWholeWay.Add(doorPosition, door);
+                    }
+                    
                 }
                 deletedObjectsThisStep.Add(secondObject, tempObject);
 
                 deletedObjectsWholeWay.Add(secondObject, tempObject);
-                //deletedObjects.Add(secondObject, tempObject);
 
 
                 return tempPath;
