@@ -87,47 +87,13 @@ namespace AlgorithmLibrary
             //Dictionary that keeps all objects from the map.
             Point[] allFoundedObjectsOnMap = FindAllObjects(map.S);
 
-            //All combinations from allFoundedObjectsOnMap of the map.
-            List<Point[]> allCombinations = new List<Point[]>();
-
 #if false
             Console.WriteLine("I've started genereting combinations!");
 #endif
             Point[] shortestWayOfAlgorithm = null;
             if (allFoundedObjectsOnMap.Any())
             {
-                //Generating all combinations from founded objects.
-                for (int i = allFoundedObjectsOnMap.Count(); i > 0; i--)
-                {
-                    var resultT = Combinations.MyCombinations(allFoundedObjectsOnMap, i);
-                    foreach (var comb in resultT)
-                    {
-                        allCombinations.Add(comb.ToArray());
-                    }
-                }
-                
-
-#if false
-                foreach (var item in allCombinations)
-                {
-                    foreach(Point point in item)
-                    {
-                        Console.Write(point + "; ");
-                    }
-                    Console.WriteLine();
-                }
-                //Console.WriteLine();
-                //Console.WriteLine();
-                //foreach (var item in myAllCombination)
-                //{
-                //    foreach (Point point in item)
-                //    {
-                //        Console.Write(point + "; ");
-                //    }
-                //    Console.WriteLine();
-                //}
-#endif
-                shortestWayOfAlgorithm = ReturnShortestPathFromCombinations(allCombinations);
+                shortestWayOfAlgorithm = ReturnShortestPathFromCombinations(allFoundedObjectsOnMap);
             }
 #if false
             Console.WriteLine("I finished combinations!");
@@ -551,29 +517,34 @@ namespace AlgorithmLibrary
         }
 
         #region Pathfinding algorithms
-        private Point[] ReturnShortestPathFromCombinations(IList<Point[]> combinations)
+        private Point[] ReturnShortestPathFromCombinations(Point[] allFoundedObjectsOnMap)
         {
             Point[] shortestWay = null;
             List<Point[]> differentWays = new List<Point[]>();
-
-            //Example of a combination in string array - {"a", "b", "c"}.
-            foreach (Point[] combination in combinations)
+            //Generating all combinations from founded objects.
+            for (int i = 1; i <= allFoundedObjectsOnMap.Count(); i++)
             {
+                double procent = i * 100 / allFoundedObjectsOnMap.Count();
+                Console.WriteLine($"Loading... {procent}%");
+
+                var severalCombinations = Combinations.MyCombinations(allFoundedObjectsOnMap, i);
+                //Example of a combination in string array - {"a", "b", "c"}.
+                foreach (Point[] combination in severalCombinations)
+                {
 #if false
                 foreach (var item in combination)
                 {
-                    Console.Write(item);
+                    Console.Write(map.ReturnObject(item));
                 }
                 Console.WriteLine();
 #endif
-                Point[] tempShortestWay = TryCombinePathsToObjects(combination, differentWays);
+                    Point[] tempShortestWay = TryCombinePathsToObjects(combination, differentWays);
 
-                shortestWay = ChangeShortestWay(tempShortestWay, shortestWay);
+                    shortestWay = ChangeShortestWay(tempShortestWay, shortestWay);
 
+                }
+                
             }
-
-
-
             return shortestWay;
         }
 
