@@ -524,7 +524,8 @@ namespace AlgorithmLibrary
         private Point[] ReturnShortestPathFromAllFoundedObjects(Point[] allFoundedObjectsOnMap)
         {
             Point[] shortestWay = null;
-
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
             //Generating all combinations from founded objects.
             Parallel.For(1, allFoundedObjectsOnMap.Count() + 1, i =>
            {
@@ -550,6 +551,14 @@ namespace AlgorithmLibrary
               });
 
            });
+            stopwatch.Stop();
+            TimeSpan ts = stopwatch.Elapsed;
+
+            // Format and display the TimeSpan value.
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                ts.Hours, ts.Minutes, ts.Seconds,
+                ts.Milliseconds / 10);
+            Console.WriteLine("RunTime " + elapsedTime);
             return shortestWay;
         }
 
