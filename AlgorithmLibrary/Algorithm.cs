@@ -93,7 +93,7 @@ namespace AlgorithmLibrary
             Point[] shortestWayOfAlgorithm = null;
             if (allFoundedObjectsOnMap.Any())
             {
-                shortestWayOfAlgorithm = ReturnShortestPathFromCombinations(allFoundedObjectsOnMap);
+                shortestWayOfAlgorithm = ReturnShortestPathFromAllFoundedObjects(allFoundedObjectsOnMap);
             }
 #if false
             Console.WriteLine("I finished combinations!");
@@ -232,15 +232,15 @@ namespace AlgorithmLibrary
         /// </summary>
         /// <param name="deletedObjects"></param>
 
-        private void RestoreDeletedObjects(Dictionary<Point, char> deletedObjectsmy)
+        private void RestoreDeletedObjects(Dictionary<Point, char> deletedObjects)
         {
-            if(deletedObjectsmy.Any())
+            if(deletedObjects.Any())
             {
-                foreach (var item in deletedObjectsmy)
+                foreach (var item in deletedObjects)
                 {
                     map.ChangeObject(item.Key, item.Value);
                 }
-                deletedObjectsmy.Clear();
+                deletedObjects.Clear();
             }
         }
 
@@ -517,15 +517,14 @@ namespace AlgorithmLibrary
         }
 
         #region Pathfinding algorithms
-        private Point[] ReturnShortestPathFromCombinations(Point[] allFoundedObjectsOnMap)
+        private Point[] ReturnShortestPathFromAllFoundedObjects(Point[] allFoundedObjectsOnMap)
         {
             Point[] shortestWay = null;
             List<Point[]> differentWays = new List<Point[]>();
             //Generating all combinations from founded objects.
             for (int i = 1; i <= allFoundedObjectsOnMap.Count(); i++)
             {
-                double procent = i * 100 / allFoundedObjectsOnMap.Count();
-                Console.WriteLine($"Loading... {procent}%");
+
 
                 var severalCombinations = Combinations.MyCombinations(allFoundedObjectsOnMap, i);
                 //Example of a combination in string array - {"a", "b", "c"}.
@@ -543,7 +542,9 @@ namespace AlgorithmLibrary
                     shortestWay = ChangeShortestWay(tempShortestWay, shortestWay);
 
                 }
-                
+                double procent = i * 100 / allFoundedObjectsOnMap.Count();
+                Console.WriteLine($"Loading... {procent}%");
+
             }
             return shortestWay;
         }
