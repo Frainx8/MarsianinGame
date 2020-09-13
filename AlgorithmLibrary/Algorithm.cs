@@ -256,7 +256,7 @@ namespace AlgorithmLibrary
             }
         }
 
-        private Point[] TryCombinePathsToObjects(Point[] combination, List<Point[]> differentWays)
+        private Point[] TryCombinePathsToObjects(Point[] combination)
         {
 #if false
             foreach (var _string in combination)
@@ -266,6 +266,7 @@ namespace AlgorithmLibrary
             Console.WriteLine();
 #endif
             Point[] shortestWay = null;
+            List<Point[]> differentWays = new List<Point[]>();
             for (int i = 0; i < combination.Length; i++)
             {
                 Point currentPosition = map.S;
@@ -520,7 +521,7 @@ namespace AlgorithmLibrary
         private Point[] ReturnShortestPathFromAllFoundedObjects(Point[] allFoundedObjectsOnMap)
         {
             Point[] shortestWay = null;
-            List<Point[]> differentWays = new List<Point[]>();
+
             //Generating all combinations from founded objects.
             for (int i = 1; i <= allFoundedObjectsOnMap.Count(); i++)
             {
@@ -537,7 +538,7 @@ namespace AlgorithmLibrary
                 }
                 Console.WriteLine();
 #endif
-                    Point[] tempShortestWay = TryCombinePathsToObjects(combination, differentWays);
+                    Point[] tempShortestWay = TryCombinePathsToObjects(combination);
 
                     shortestWay = ChangeShortestWay(tempShortestWay, shortestWay);
 
