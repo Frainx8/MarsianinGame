@@ -4,18 +4,19 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace AlgorithmLibrary
 {
     public class Algorithm
     //TODO change findPath using delegates, find out why the program is stops on permutations.
     {
-        private Maps map;
+        private Maps defaultMap;
         private const int POINTSRANGE = 1;
         private int currentHP = CommonStuff.MAX_HP;
         private int BASIC_FIRE_DAMAGE = 20;
         private const int MAX_STEPS_PER_PLACE = 5;
-        private delegate Point[] PathFindDelegete(Point start, Point goal, Dictionary<Point, int> visitedPlaces);
+        private delegate Point[] PathFindDelegete(Point start, Point goal, Dictionary<Point, int> visitedPlaces, Maps map);
         private PathFindDelegete pathFindDelegete;
         public bool IsDead { get; private set; }
         public Point[] Result { get; private set; }
@@ -23,7 +24,7 @@ namespace AlgorithmLibrary
 
         public Algorithm(Maps map)
         {
-            this.map = map;
+            defaultMap = map;
 
             Result = DoAlgorithm();
 
@@ -78,14 +79,14 @@ namespace AlgorithmLibrary
         {
             #region First step
 
-            Point[] firstStep = FindPath(map.S, map.Q);
+            Point[] firstStep = FindPath(defaultMap.S, defaultMap.Q, defaultMap);
 
             #endregion
 
             #region Second step            
 
             //Dictionary that keeps all objects from the map.
-            Point[] allFoundedObjectsOnMap = FindAllObjects(map.S);
+            Point[] allFoundedObjectsOnMap = FindAllObjects(defaultMap.S, defaultMap);
 
 #if false
             Console.WriteLine("I've started genereting combinations!");
@@ -125,7 +126,7 @@ namespace AlgorithmLibrary
             else
             {
                 //If there is fire - the character burnt.
-                IsDead = map.IsThereFire;
+                IsDead = defaultMap.IsThereFire;
 
                 return null;
             }
@@ -154,7 +155,7 @@ namespace AlgorithmLibrary
         /// </summary>
         /// <param name="path">A path to pass.</param>
         /// <returns>Returns true if died in the way.</returns>
-        private bool TakeDamageFromPath(Point[] path)
+        private bool TakeDamageFromPath(Point[] path, Maps map)
         {
             foreach (Point position in path)
             {
@@ -180,7 +181,7 @@ namespace AlgorithmLibrary
             return false;
         }
 
-        private void UseMedkit(Point position)
+        private void UseMedkit(Point position, Maps map)
         {
             currentHP = CommonStuff.MAX_HP;
             map.DeleteObject(position);
@@ -192,7 +193,7 @@ namespace AlgorithmLibrary
         /// <param name="path"></param>
         /// <param name="_objectsToCompare"></param>
         /// <returns>Returns true if found, else false.</returns>
-        private bool IsThereObjectInWay(Point[] path, char[] _objectsToCompare)
+        private bool IsThereObjectInWay(Point[] path, char[] _objectsToCompare, Maps map)
         {
             foreach (Point position in path)
             {
@@ -212,9 +213,9 @@ namespace AlgorithmLibrary
         /// </summary>
         /// <param name="path">Way to check.</param>
         /// <returns>True if found fire, else false.</returns>
-        private bool IsThereFire(Point[] path)
+        private bool IsThereFire(Point[] path, Maps map)
         {
-            return IsThereObjectInWay(path, map.FirePower);
+            return IsThereObjectInWay(path, map.FirePower, map);
         }
 
         /// <summary>
@@ -222,9 +223,9 @@ namespace AlgorithmLibrary
         /// </summary>
         /// <param name="path">Way to check.</param>
         /// <returns>True if found a door, else false.</returns>
-        private bool IsThereDoor(Point[] path)
+        private bool IsThereDoor(Point[] path, Maps map)
         {
-            return IsThereObjectInWay(path, map.Doors);
+            return IsThereObjectInWay(path, map.Doors, map);
         }
 
         /// <summary>
@@ -232,7 +233,7 @@ namespace AlgorithmLibrary
         /// </summary>
         /// <param name="deletedObjects"></param>
 
-        private void RestoreDeletedObjects(Dictionary<Point, char> deletedObjects)
+        private void RestoreDeletedObjects(Dictionary<Point, char> deletedObjects, Maps map)
         {
             if(deletedObjects.Any())
             {
@@ -256,7 +257,7 @@ namespace AlgorithmLibrary
             }
         }
 
-        private Point[] TryCombinePathsToObjects(Point[] combination)
+        private Point[] TryCombinePathsToObjects(Point[] combination, Maps map)
         {
 #if false
             foreach (var _string in combination)
@@ -275,7 +276,7 @@ namespace AlgorithmLibrary
                 Dictionary<Point, char> deletedObjectsWholeWay = new Dictionary<Point, char>();
                 List<Point> wholePath = new List<Point>();
 
-                Point[] tempPath = ReturnPathFromTwoObject(currentPosition, combination[i], deletedObjectsThisStep, deletedObjectsWholeWay);
+                Point[] tempPath = ReturnPathFromTwoObject(currentPosition, combination[i], deletedObjectsThisStep, deletedObjectsWholeWay, map);
 #if false
                 Console.WriteLine($"From S to {combination[i]} - " + tempPath.Count());
 #endif
@@ -306,16 +307,17 @@ namespace AlgorithmLibrary
 #endif
                     Point[] copyOfWholePath = wholePath.ToArray();
 
-                    TryCombinePathsToObjects(newCombination, otherObjects.ToArray(), wholePath, differentWays, deletedObjectsWholeWay);
+                    TryCombinePathsToObjects(newCombination, otherObjects.ToArray(), wholePath, differentWays,
+                        deletedObjectsWholeWay, map);
 
                     wholePath = new List<Point>(copyOfWholePath);
 
-                    RestoreDeletedObjects(deletedObjectsThisStep);
+                    RestoreDeletedObjects(deletedObjectsThisStep, map);
 
                 }
                 else
                 {
-                    RestoreDeletedObjects(deletedObjectsThisStep);
+                    RestoreDeletedObjects(deletedObjectsThisStep, map);
                 }
             }
             foreach(Point[] path in differentWays)
@@ -326,7 +328,7 @@ namespace AlgorithmLibrary
         }
 
         private void TryCombinePathsToObjects(Point combination, Point[] oldOtherObjects, List<Point> wholePath,
-            List<Point[]> differentWays, Dictionary<Point, char> deletedObjectsWholeWay)
+            List<Point[]> differentWays, Dictionary<Point, char> deletedObjectsWholeWay, Maps map)
         {
 #if false
             Console.Write("current comb " + combination + " and old comb");
@@ -346,7 +348,7 @@ namespace AlgorithmLibrary
                     Dictionary<Point, char> copyOfdeletedObjectsWholeWay = deletedObjectsWholeWay.ToDictionary(entry => entry.Key,
                        entry => entry.Value);
                     Point[] tempPath = ReturnPathFromTwoObject(currentPosition,
-                        oldOtherObjects[i], deletedObjectsThisStep, deletedObjectsWholeWay);
+                        oldOtherObjects[i], deletedObjectsThisStep, deletedObjectsWholeWay, map);
 #if false
                     if (tempPath != null)
                     {
@@ -386,7 +388,8 @@ namespace AlgorithmLibrary
                         }
                         Console.WriteLine();
 #endif
-                        TryCombinePathsToObjects(newCombination, newOtherObjects.ToArray(), wholePath, differentWays, deletedObjectsWholeWay);
+                        TryCombinePathsToObjects(newCombination, newOtherObjects.ToArray(), wholePath,
+                            differentWays, deletedObjectsWholeWay, map);
 
 #if false
                         Console.WriteLine("Original"+ wholePath.Count());
@@ -439,19 +442,19 @@ namespace AlgorithmLibrary
                         Console.WriteLine();
 #endif
 
-                        RestoreDeletedObjects(secondCopyOfdeletedObjectsWholeWay);
+                        RestoreDeletedObjects(secondCopyOfdeletedObjectsWholeWay, map);
 
 
                     }
                     else
                     {
-                        RestoreDeletedObjects(deletedObjectsThisStep);
+                        RestoreDeletedObjects(deletedObjectsThisStep, map);
                     }
                 }
             }
             else
             {
-                Point[] wayToQ = TryFindWayToQ(combination);
+                Point[] wayToQ = TryFindWayToQ(combination, map);
                 if (wayToQ != null)
                 {
 
@@ -465,9 +468,9 @@ namespace AlgorithmLibrary
             }
         }
 
-        private Point[] TryFindWayToQ(Point currentPosition)
+        private Point[] TryFindWayToQ(Point currentPosition, Maps map)
         {
-            Point[] pathToQ = FindPath(currentPosition, map.Q);
+            Point[] pathToQ = FindPath(currentPosition, map.Q, map);
             if (pathToQ == null)
             {
                 return null;
@@ -478,9 +481,9 @@ namespace AlgorithmLibrary
             }
         }
         private Point[] ReturnPathFromTwoObject(Point firstObject, Point secondObject,
-            Dictionary<Point, char> deletedObjectsThisStep, Dictionary<Point, char> deletedObjectsWholeWay)
+            Dictionary<Point, char> deletedObjectsThisStep, Dictionary<Point, char> deletedObjectsWholeWay, Maps map)
         {
-            Point[] tempPath = FindPath(firstObject, secondObject);
+            Point[] tempPath = FindPath(firstObject, secondObject, map);
 
             if (tempPath == null)
             {
@@ -492,7 +495,7 @@ namespace AlgorithmLibrary
 
                 if (Maps.MEDKIT == tempObject)
                 {
-                    UseMedkit(secondObject);
+                    UseMedkit(secondObject, map);
                 }
                 //If founded a key - delete also the door.
                 else if (map.Keys.Contains(tempObject))
@@ -523,30 +526,30 @@ namespace AlgorithmLibrary
             Point[] shortestWay = null;
 
             //Generating all combinations from founded objects.
-            for (int i = 1; i <= allFoundedObjectsOnMap.Count(); i++)
-            {
+            Parallel.For(1, allFoundedObjectsOnMap.Count() + 1, i =>
+           {
 
 
-                var severalCombinations = Combinations.MyCombinations(allFoundedObjectsOnMap, i);
+               var severalCombinations = Combinations.MyCombinations(allFoundedObjectsOnMap, i);
                 //Example of a combination in string array - {"a", "b", "c"}.
-                foreach (Point[] combination in severalCombinations)
-                {
+                Parallel.ForEach(severalCombinations, (combination) =>
+              {
 #if false
                 foreach (var item in combination)
                 {
                     Console.Write(map.ReturnObject(item));
                 }
-                Console.WriteLine();
+                Console.WriteLine();                
 #endif
-                    Point[] tempShortestWay = TryCombinePathsToObjects(combination);
+                   Maps copyOfDefaultMap = new Maps(defaultMap);
 
-                    shortestWay = ChangeShortestWay(tempShortestWay, shortestWay);
+                  Point[] tempShortestWay = TryCombinePathsToObjects(combination, copyOfDefaultMap);
 
-                }
-                double procent = i * 100 / allFoundedObjectsOnMap.Count();
-                Console.WriteLine($"Loading... {procent}%");
+                  shortestWay = ChangeShortestWay(tempShortestWay, shortestWay);
 
-            }
+              });
+
+           });
             return shortestWay;
         }
 
@@ -556,7 +559,7 @@ namespace AlgorithmLibrary
         /// <param name="start">The start Point.</param>
         /// <param name="goal">The destiny point.</param>
         /// <returns>The array of Point from which the path is.</returns>
-        private Point[] FindPathA(Point start, Point goal, Dictionary<Point, int> visitedPlaces)
+        private Point[] FindPathA(Point start, Point goal, Dictionary<Point, int> visitedPlaces, Maps map)
         {
             Cell source = new Cell() { Parent = null, Point = start };
 
@@ -616,7 +619,7 @@ namespace AlgorithmLibrary
         /// <param name="start">Start position where the search starts</param>
         /// <param name="goal">Goal position.</param>
         /// <returns>Returns a closest path to the goal.</returns>
-        private Point[] FindPathDijklstra(Point start, Point goal)
+        private Point[] FindPathDijklstra(Point start, Point goal, Maps map)
             {
                 Cell source = new Cell(start, 0, null);
                 List<Cell> openList = new List<Cell>()
@@ -662,7 +665,7 @@ namespace AlgorithmLibrary
         /// </summary>
         /// <param name="start">Start point to start the search.</param>
         /// <returns>Returns dictionary of founded objects by string and point.</returns>
-        private Point[] FindAllObjects(Point start)
+        private Point[] FindAllObjects(Point start, Maps map)
         {
             Cell source = new Cell(start, null);
             List<Cell> openList = new List<Cell>()
@@ -718,16 +721,16 @@ namespace AlgorithmLibrary
         /// <param name="start">Start point to start searching.</param>
         /// <param name="goal">Goal of the algorithm</param>
         /// <returns>Returns shortest way to the goal, else null if there is no way.</returns>
-        private Point[] FindPath(Point start, Point goal)
+        private Point[] FindPath(Point start, Point goal, Maps map)
         {
             //Used for keeping of number of times that character step on a place.
             Dictionary<Point, int> visitedPlaces = new Dictionary<Point, int>();
-            ScanWalkAbleTerritory(start, visitedPlaces);
+            ScanWalkAbleTerritory(start, visitedPlaces, map);
             pathFindDelegete = FindPathA;
-            return FindPath(start, goal, visitedPlaces);
+            return FindPath(start, goal, visitedPlaces, map);
         }
 
-        private Point[] FindPathBread(Point start, Point goal, Dictionary<Point, int> visitedPlaces)
+        private Point[] FindPathBread(Point start, Point goal, Dictionary<Point, int> visitedPlaces, Maps map)
         {
             Cell source = new Cell() { Parent = null, Point = start };
 
@@ -790,9 +793,9 @@ namespace AlgorithmLibrary
             return foundedPath;
         }
 
-        private Point[] FindPath(Point start, Point goal, Dictionary<Point, int> visitedPlaces)
+        private Point[] FindPath(Point start, Point goal, Dictionary<Point, int> visitedPlaces, Maps map)
         {
-            Point[] foundedPath = pathFindDelegete(start, goal, visitedPlaces);
+            Point[] foundedPath = pathFindDelegete(start, goal, visitedPlaces, map);
 
             if (foundedPath == null)
             {
@@ -830,7 +833,7 @@ namespace AlgorithmLibrary
 
                 int tempHP = currentHP;
 
-                if (!TakeDamageFromPath(foundedPath))
+                if (!TakeDamageFromPath(foundedPath, map))
                 {
                     return foundedPath;
 
@@ -841,7 +844,7 @@ namespace AlgorithmLibrary
                     //If died in the founded way - restore HP and try again considering the visited places.
                     currentHP = tempHP;
                     pathFindDelegete = FindPathBread;
-                    return FindPath(start, goal, visitedPlaces);
+                    return FindPath(start, goal, visitedPlaces, map);
                 }
             }
             
@@ -894,7 +897,7 @@ namespace AlgorithmLibrary
         /// </summary>
         /// <param name="start">Start point where the search starts.</param>
         /// <returns>Returns number of walkable places.</returns>
-        private void ScanWalkAbleTerritory(Point start, Dictionary<Point, int> visitedPlaces)
+        private void ScanWalkAbleTerritory(Point start, Dictionary<Point, int> visitedPlaces, Maps map)
         {
             Cell source = new Cell(start, null);
 
@@ -962,7 +965,7 @@ namespace AlgorithmLibrary
         /// Show a path to the console.
         /// </summary>
         /// <param name="path">A path to show.</param>
-        private void ShowPathToConsole(Point[] path)
+        private void ShowPathToConsole(Point[] path, Maps map)
         {
             int index = 0;
             for (int y = 0; y < map.Map.GetLength(0); y++)
