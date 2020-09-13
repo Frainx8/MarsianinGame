@@ -16,7 +16,6 @@ namespace AlgorithmLibrary
         private const int MAX_STEPS_PER_PLACE = 5;
         private delegate Point[] PathFindDelegete(Point start, Point goal, Dictionary<Point, int> visitedPlaces);
         private PathFindDelegete pathFindDelegete;
-        private Dictionary<string, Point> allFoundedObjectsOnMap;
         public bool IsDead { get; private set; }
         public Point[] Result { get; private set; }
         public string Directions { get; private set; }
@@ -85,10 +84,11 @@ namespace AlgorithmLibrary
             #region Second step            
 
             //Dictionary that keeps all objects from the map.
-            allFoundedObjectsOnMap = FindAllObjects(map.S);
+            Point[] allFoundedObjectsOnMap = FindAllObjects(map.S);
 
             //All combinations from allFoundedObjectsOnMap of the map.
-            List<string[]> allCombinations = new List<string[]>();
+            List<Point[]> allCombinations = new List<Point[]>();
+            List<Point[]> myAllCombination = new List<Point[]>();
 
 #if false
             Console.WriteLine("I've started genereting combinations!");
@@ -99,13 +99,41 @@ namespace AlgorithmLibrary
                 //Generating all combinations from founded objects.
                 for (int i = allFoundedObjectsOnMap.Count(); i > 0; i--)
                 {
-                    var resultT = Combinations.FindCombinations(allFoundedObjectsOnMap.Keys, i);
-                    foreach (var comb in resultT.ToList())
+                    var resultT = Combinations.GetCombinations(allFoundedObjectsOnMap, i);
+                    foreach (var comb in resultT)
                     {
                         allCombinations.Add(comb.ToArray());
                     }
                 }
-                Console.WriteLine(true);
+                //for (int i = allFoundedObjectsOnMap.Count(); i > 0; i--)
+                //{
+                //    var resultT = Combinations.MyCombinations(allFoundedObjectsOnMap, i);
+                //    foreach (var item in resultT)
+                //    {
+                //        myAllCombination.Add(item);
+                //    }
+                //}
+                
+#if false
+                foreach (var item in allCombinations)
+                {
+                    foreach(Point point in item)
+                    {
+                        Console.Write(point + "; ");
+                    }
+                    Console.WriteLine();
+                }
+                Console.WriteLine();
+                Console.WriteLine();
+                foreach (var item in myAllCombination)
+                {
+                    foreach (Point point in item)
+                    {
+                        Console.Write(point + "; ");
+                    }
+                    Console.WriteLine();
+                }
+#endif
                 shortestWayOfAlgorithm = ReturnShortestPathFromCombinations(allCombinations);
             }
 #if false
@@ -269,7 +297,7 @@ namespace AlgorithmLibrary
             }
         }
 
-        private Point[] TryCombinePathsToObjects(string[] combination, List<Point[]> differentWays)
+        private Point[] TryCombinePathsToObjects(Point[] combination, List<Point[]> differentWays)
         {
 #if false
             foreach (var _string in combination)
@@ -287,7 +315,7 @@ namespace AlgorithmLibrary
                 Dictionary<Point, char> deletedObjectsWholeWay = new Dictionary<Point, char>();
                 List<Point> wholePath = new List<Point>();
 
-                Point[] tempPath = ReturnPathFromTwoObject(currentPosition, allFoundedObjectsOnMap[combination[i]], deletedObjectsThisStep, deletedObjectsWholeWay);
+                Point[] tempPath = ReturnPathFromTwoObject(currentPosition, combination[i], deletedObjectsThisStep, deletedObjectsWholeWay);
 #if false
                 Console.WriteLine($"From S to {combination[i]} - " + tempPath.Count());
 #endif
@@ -296,10 +324,10 @@ namespace AlgorithmLibrary
                     wholePath.AddRange(tempPath);
                     wholePath.Remove(wholePath.Last());
 
-                    string newCombination = combination[i];
+                    Point newCombination = combination[i];
 
 
-                    List<string> otherObjects = new List<string>(combination);
+                    List<Point> otherObjects = new List<Point>(combination);
                     otherObjects.Remove(combination[i]);
 
 #if false
@@ -337,7 +365,7 @@ namespace AlgorithmLibrary
             return shortestWay;
         }
 
-        private void TryCombinePathsToObjects(string combination, string[] oldOtherObjects, List<Point> wholePath,
+        private void TryCombinePathsToObjects(Point combination, Point[] oldOtherObjects, List<Point> wholePath,
             List<Point[]> differentWays, Dictionary<Point, char> deletedObjectsWholeWay)
         {
 #if false
@@ -353,12 +381,12 @@ namespace AlgorithmLibrary
                 Point[] copyOfWholePath = wholePath.ToArray();
                 for (int i = 0; i < oldOtherObjects.Length; i++)
                 {
-                    Point currentPosition = allFoundedObjectsOnMap[combination];
+                    Point currentPosition = combination;
                     Dictionary<Point, char> deletedObjectsThisStep = new Dictionary<Point, char>();
                     Dictionary<Point, char> copyOfdeletedObjectsWholeWay = deletedObjectsWholeWay.ToDictionary(entry => entry.Key,
                        entry => entry.Value);
-                    Point[] tempPath = ReturnPathFromTwoObject(currentPosition, 
-                        allFoundedObjectsOnMap[oldOtherObjects[i]], deletedObjectsThisStep, deletedObjectsWholeWay);
+                    Point[] tempPath = ReturnPathFromTwoObject(currentPosition,
+                        oldOtherObjects[i], deletedObjectsThisStep, deletedObjectsWholeWay);
 #if false
                     if (tempPath != null)
                     {
@@ -382,9 +410,9 @@ namespace AlgorithmLibrary
                         Console.WriteLine("after" + wholePath.Count());
 #endif
 
-                        string newCombination = oldOtherObjects[i];
+                        Point newCombination = oldOtherObjects[i];
 
-                        List<string> newOtherObjects = new List<string>(oldOtherObjects);
+                        List<Point> newOtherObjects = new List<Point>(oldOtherObjects);
                         newOtherObjects.Remove(oldOtherObjects[i]);
 
 
@@ -463,7 +491,7 @@ namespace AlgorithmLibrary
             }
             else
             {
-                Point[] wayToQ = TryFindWayToQ(allFoundedObjectsOnMap[combination]);
+                Point[] wayToQ = TryFindWayToQ(combination);
                 if (wayToQ != null)
                 {
 
@@ -528,13 +556,13 @@ namespace AlgorithmLibrary
         }
 
         #region Pathfinding algorithms
-        private Point[] ReturnShortestPathFromCombinations(IList<string[]> combinations)
+        private Point[] ReturnShortestPathFromCombinations(IList<Point[]> combinations)
         {
             Point[] shortestWay = null;
             List<Point[]> differentWays = new List<Point[]>();
 
             //Example of a combination in string array - {"a", "b", "c"}.
-            foreach (string[] combination in combinations)
+            foreach (Point[] combination in combinations)
             {
 #if false
                 foreach (var item in combination)
@@ -666,7 +694,7 @@ namespace AlgorithmLibrary
         /// </summary>
         /// <param name="start">Start point to start the search.</param>
         /// <returns>Returns dictionary of founded objects by string and point.</returns>
-        private Dictionary<string, Point> FindAllObjects(Point start)
+        private Point[] FindAllObjects(Point start)
         {
             Cell source = new Cell(start, null);
             List<Cell> openList = new List<Cell>()
@@ -676,10 +704,7 @@ namespace AlgorithmLibrary
 
             List<Cell> closedList = new List<Cell>();
 
-            Dictionary<string, Point> result = new Dictionary<string, Point>();
-
-            //If there are medkits keep tracking their quantity.
-            int numberOfMedkit = 1;
+            List<Point> result = new List<Point>();
 
             while (openList.Any())
             {
@@ -687,18 +712,11 @@ namespace AlgorithmLibrary
 
                 char tempObject = map.ReturnObject(current.Point);
                 
-                if(tempObject != '.')
+                if(tempObject != '.' )
                 {
-                    if(Maps.KEYS.Contains(tempObject))
-                    {
-                        result.Add(tempObject.ToString(), current.Point);
-                    }
-                    if (Maps.MEDKIT == tempObject)
-                    {
-                        string medkitName = $"H{numberOfMedkit}";
-                        numberOfMedkit++;
-                        result.Add(medkitName, current.Point);
-                    }
+                    if(Maps.KEYS.Contains(tempObject) || Maps.MEDKIT == tempObject)
+                        result.Add(current.Point);
+
                 }
 
                 openList.Remove(current);
@@ -723,7 +741,7 @@ namespace AlgorithmLibrary
                 }
             }
 
-            return result;
+            return result.ToArray();
         }
 
         /// <summary>

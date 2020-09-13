@@ -2,7 +2,7 @@
 
 namespace AlgorithmLibrary
 {
-    public struct Point : IEquatable<Point>
+    public struct Point : IEquatable<Point>, IComparable
     {
 
         public static readonly Point nullPoint = new Point(-1, -1);
@@ -51,6 +51,38 @@ namespace AlgorithmLibrary
         public override string ToString()
         {
             return $"{X}, {Y}";
+        }
+
+        public static bool operator ==(Point one, Point another)
+        {
+            return one.Equals(another);
+        }
+
+        public static bool operator !=(Point one, Point another)
+        {
+            return !(one == another);
+        }
+
+
+        public int CompareTo(object obj)
+        {
+            Point otherPoint = (Point)obj;
+            if (Y < otherPoint.Y || Y == otherPoint.Y && X < otherPoint.X)
+            {
+                return -1;
+            }
+            else if (X == otherPoint.X && Y == otherPoint.Y)
+            {
+                return 0;
+            }
+            else if (Y > otherPoint.Y || Y == otherPoint.Y && X > otherPoint.X)
+            {
+                return 1;
+            }
+            else
+            {
+                return 1;
+            }
         }
     }
 }
