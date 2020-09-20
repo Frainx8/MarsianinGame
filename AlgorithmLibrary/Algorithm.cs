@@ -334,7 +334,7 @@ namespace AlgorithmLibrary
             Console.Write("current comb " + combination + " and old comb");
             foreach (var _string in oldOtherObjects)
             {
-                Console.Write(" " + _string);
+                Console.Write(" " + map.ReturnObject(_string));
             }
             Console.WriteLine();
 #endif
@@ -526,30 +526,35 @@ namespace AlgorithmLibrary
             Point[] shortestWay = null;
 
             //Generating all combinations from founded objects.
-            Parallel.For(1, allFoundedObjectsOnMap.Count() + 1, i =>
-           {
+            //before
+            for(int i = 1; i <= allFoundedObjectsOnMap.Count(); i++) 
+            {
 
 
-               var severalCombinations = Combinations.MyCombinations(allFoundedObjectsOnMap, i);
+                var severalCombinations = Combinations.MyCombinations(allFoundedObjectsOnMap, i);
                 //Example of a combination in string array - {"a", "b", "c"}.
                 foreach(Point[] combination in severalCombinations) 
-              {
-#if false
+                {
+    #if false
                 foreach (var item in combination)
                 {
-                    Console.Write(map.ReturnObject(item));
+                    Console.Write(defaultMap.ReturnObject(item));
                 }
                 Console.WriteLine();                
-#endif
-                   Maps copyOfDefaultMap = new Maps(defaultMap);
+    #endif
+                    Maps copyOfDefaultMap = new Maps(defaultMap);
+    #if false
+                    ShowMapToConsole(copyOfDefaultMap);
+                    Console.WriteLine();
+    #endif
 
-                  Point[] tempShortestWay = TryCombinePathsToObjects(combination, copyOfDefaultMap);
+                    Point[] tempShortestWay = TryCombinePathsToObjects(combination, copyOfDefaultMap);
 
-                  shortestWay = ChangeShortestWay(tempShortestWay, shortestWay);
+                    shortestWay = ChangeShortestWay(tempShortestWay, shortestWay);
 
-              }
+                }
 
-           });
+            }
 
             return shortestWay;
         }
@@ -761,6 +766,7 @@ namespace AlgorithmLibrary
                 foreach (Point neighbor in neighbors)
                 {
                     char tempObject = map.ReturnObject(neighbor);
+
                     if (tempObject != '.')
                     {
                         if (map.Doors.Contains(tempObject))
@@ -771,13 +777,14 @@ namespace AlgorithmLibrary
 
                     Cell newCell = new Cell(neighbor, visitedPlaces[neighbor], current);
 
+
                     if (!isGoalFounded && newCell.Point.Equals(goal))
                     {
                         foundedPath = ReturnPath(newCell);
                         visitedPlaces[newCell.Point]++;
                         isGoalFounded = true;
                     }
-                    else if (!closedList.Contains(newCell))
+                    if (!closedList.Contains(newCell))
                     {
                         if (openList.Contains(newCell))
                         {
@@ -814,10 +821,15 @@ namespace AlgorithmLibrary
                 bool isTherePlacesLessMax = false;
 
 #if false
-                foreach (var item in visitedPlaces.Values)
+                foreach (var item in visitedPlaces)
                 {
-                    Console.WriteLine(item);
+                    Console.Write(item.Key + " - " + item.Value + " " + map.ReturnObject(item.Key) + " ");
+                    if(visitedPlaces.ContainsKey(item.Key))
+                    {
+                        Console.WriteLine(true);
+                    }
                 }
+                Console.WriteLine();
 #endif
                 foreach (int value in visitedPlaces.Values)
                 {
@@ -985,6 +997,20 @@ namespace AlgorithmLibrary
                 Console.WriteLine();
             }
             
+        }
+
+        private void ShowMapToConsole(Maps map)
+        {
+            for (int y = 0; y < map.Map.GetLength(0); y++)
+            {
+                for (int x = 0; x < map.Map.GetLength(1); x++)
+                {
+                    Console.Write(map.Map[y, x]);
+                    Console.Write(" ");
+                }
+                Console.WriteLine();
+            }
+
         }
     }
 }
