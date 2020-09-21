@@ -79,6 +79,7 @@ namespace AlgorithmLibrary
         {
             #region First step
 
+            //Trying to go to exit 
             Point[] firstStep = FindPath(defaultMap.S, defaultMap.Q);
 
             #endregion
